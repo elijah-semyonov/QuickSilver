@@ -9,4 +9,12 @@ final class QuickSilverTests: XCTestCase {
         // Defining Test Cases and Test Methods
         // https://developer.apple.com/documentation/xctest/defining_test_cases_and_test_methods
     }
+    
+    func testInitial() {
+        let instance = Instance()
+        
+        instance.executeFrame { frame in
+            
+        }
+    }
 }
