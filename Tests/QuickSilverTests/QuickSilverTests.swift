@@ -11,7 +11,7 @@ final class QuickSilverTests: XCTestCase {
     }
     
     func testInitial() {
-        let instance = Instance()
+        let instance = Instance(device: MTLCreateSystemDefaultDevice()!)
         
         instance.executeFrame { frame in
             
