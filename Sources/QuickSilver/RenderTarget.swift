@@ -1,2 +1,2 @@
-public struct RenderTarget {        
+public struct RenderTarget {
 }
