@@ -40,13 +40,7 @@ final class MonotonicAllocator: @unchecked Sendable, Allocator {
     func reset() {
         offset.store(0, ordering: .relaxed)
     }
-    
-    func allocate<T>(_ type: T.Type = T.self) -> UnsafeMutablePointer<T> {
-        let layout = MemoryLayout<T>.self
-        
-        return allocate(size: layout.size, alignment: layout.alignment).bindMemory(to: T.self, capacity: 1)
-    }
-    
+
     func deallocate(_ ptr: UnsafeRawPointer) {
         // do nothing
     }
