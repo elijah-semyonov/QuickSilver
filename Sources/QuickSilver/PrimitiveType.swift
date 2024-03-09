@@ -1,3 +1,5 @@
+import Foundation
+
 public enum PrimitiveType {
     case triangle
     case line

@@ -1,3 +1,5 @@
+import Foundation
+
 public struct StencilValue {
     let value: Int32
     

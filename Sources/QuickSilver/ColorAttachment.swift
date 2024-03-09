@@ -1,3 +1,5 @@
+import Foundation
+
 public struct ColorAttachment {
     public let texture: Texture
     public let storeAction: ColorStoreAction

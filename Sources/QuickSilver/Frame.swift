@@ -1,3 +1,5 @@
+import Foundation
+
 public class Frame {
     private let instance: Instance
     private var passes: [any Pass] = []

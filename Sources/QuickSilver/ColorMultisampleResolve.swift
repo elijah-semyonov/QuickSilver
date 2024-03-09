@@ -1,3 +1,5 @@
+import Foundation
+
 public struct ColorMultisampleResolve {
     public let texture: Texture
     public let level: Int

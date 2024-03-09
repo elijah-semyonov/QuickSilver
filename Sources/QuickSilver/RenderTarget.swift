@@ -1,3 +1,5 @@
+import Foundation
+
 public struct RenderTarget {
     public let colorAttachments: [Int: ColorAttachment]
     public let depthAttachment: DepthAttachment?

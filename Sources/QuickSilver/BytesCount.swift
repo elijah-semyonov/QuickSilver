@@ -1,3 +1,5 @@
+import Foundation
+
 struct BytesCount {
     let value: Int
     

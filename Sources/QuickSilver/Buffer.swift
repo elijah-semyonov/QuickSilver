@@ -1,2 +1,4 @@
-public struct Buffer {   
+import Foundation
+
+public struct Buffer {
 }

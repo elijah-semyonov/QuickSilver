@@ -1,3 +1,4 @@
+import Foundation
 import Metal
 
 public class Instance {

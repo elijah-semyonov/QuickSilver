@@ -1,3 +1,4 @@
+import Foundation
 import Atomics
 
 final class MonotonicAllocator: @unchecked Sendable, Allocator {
