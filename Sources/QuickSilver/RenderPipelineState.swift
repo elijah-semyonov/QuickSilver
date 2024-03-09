@@ -1,2 +1,2 @@
-struct RenderPipelineState {
+public struct RenderPipelineState {
 }

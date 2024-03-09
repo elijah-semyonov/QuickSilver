@@ -1,9 +1,9 @@
 import Atomics
 
-final class MonotonicAllocator: @unchecked Sendable {
-    let byteCount: Int
-    let alignment: Int
-    let offset = ManagedAtomic(0)
+final class MonotonicAllocator: @unchecked Sendable, Allocator {
+    private let byteCount: Int
+    private let alignment: Int
+    private let offset = ManagedAtomic(0)
     private let ptr: UnsafeMutableRawPointer
     
     init(byteCount: BytesCount, alignment: Int = MemoryLayout<UnsafeRawPointer>.size) {
@@ -44,5 +44,9 @@ final class MonotonicAllocator: @unchecked Sendable {
         let layout = MemoryLayout<T>.self
         
         return allocate(size: layout.size, alignment: layout.alignment).bindMemory(to: T.self, capacity: 1)
+    }
+    
+    func deallocate(_ ptr: UnsafeRawPointer) {
+        // do nothing
     }
 }

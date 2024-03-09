@@ -14,7 +14,18 @@ final class QuickSilverTests: XCTestCase {
         let instance = Instance(device: MTLCreateSystemDefaultDevice()!)
         
         instance.executeFrame { frame in
+            let texture = frame
             
+            let renderTarget = RenderTarget(
+                colorAttachments: [
+                    0: ColorAttachment(texture: Texture(), storeAction: .storeAction(.store), loadAction: .clear(.init(red: 1.0, green: 1.0, blue: 1.0, alpha: 1.0)))
+                ],
+                depthAttachment: nil,
+                stencilAttachment: nil
+            )
+            
+            frame.addRenderPass(renderTarget: renderTarget) { scope in                
+            }
         }
     }
 }
