@@ -1,4 +1,4 @@
 import Foundation
 
-public struct Texture {
+public struct Texture: Hashable {
 }

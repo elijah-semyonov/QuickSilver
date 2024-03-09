@@ -25,6 +25,10 @@ let package = Package(
         ),
         .testTarget(
             name: "QuickSilverTests",
-            dependencies: ["QuickSilver"]),
+            dependencies: ["QuickSilver"],
+            resources: [
+                .copy("TestShaders.metal")
+            ]
+        )
     ]
 )

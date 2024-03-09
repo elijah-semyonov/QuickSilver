@@ -11,7 +11,12 @@ final class QuickSilverTests: XCTestCase {
     }
     
     func testInitial() {
-        let instance = Instance(device: MTLCreateSystemDefaultDevice()!)
+        let device = MTLCreateSystemDefaultDevice()!
+        let library = try! device.makeDefaultLibrary(bundle: Bundle.module)
+        
+        print(library.functionNames)
+        
+        let instance = Instance(device: device)
         
         instance.executeFrame { frame in
             let texture = frame
@@ -24,7 +29,8 @@ final class QuickSilverTests: XCTestCase {
                 stencilAttachment: nil
             )
             
-            frame.addRenderPass(renderTarget: renderTarget) { scope in                
+            frame.addRenderPass(renderTarget: renderTarget) { scope in  
+                //scope.setRenderPipelineState(RenderPipelineState())
             }
         }
     }
