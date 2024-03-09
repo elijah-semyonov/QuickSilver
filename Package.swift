@@ -11,11 +11,18 @@ let package = Package(
             name: "QuickSilver",
             targets: ["QuickSilver"]),
     ],
+    dependencies: [
+        .package(url: "https://github.com/apple/swift-atomics.git", .upToNextMajor(from: "1.2.0")),
+    ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
         // Targets can depend on other targets in this package and products from dependencies.
         .target(
-            name: "QuickSilver"),
+            name: "QuickSilver",
+            dependencies: [
+                .product(name: "Atomics", package: "swift-atomics")
+            ]
+        ),
         .testTarget(
             name: "QuickSilverTests",
             dependencies: ["QuickSilver"]),

@@ -1,7 +1,8 @@
-public class RenderPass: Pass {
-    let renderTarget: RenderTarget
+class RenderPass: Pass {
+    private let renderTarget: RenderTarget
+    private var renderCommands: [RenderPassCommand] = []
         
-    public init(renderTarget: RenderTarget) {
+    init(renderTarget: RenderTarget) {
         self.renderTarget = renderTarget
     }
 }

@@ -6,13 +6,14 @@ public class Frame {
         self.instance = instance
     }
     
-    func end() {
-    }
-    
-    func addRenderPass(renderTarget: RenderTarget, _ closure: (RenderPass) -> Void) {
+    public func addRenderPass(renderTarget: RenderTarget, _ closure: (borrowing RenderPassCommands) -> Void) {
         let pass = RenderPass(renderTarget: renderTarget)
         passes.append(pass)
         
-        closure(pass)    
+        let commands = RenderPassCommands(renderPass: pass)
+        closure(commands)
+    }
+    
+    func end() {
     }
 }
