@@ -1,8 +1,7 @@
 public struct CPUPassResourceUsageRecorder: ~Copyable {
-    let pass: CPUPass    
-    let trackers: FrameResourceUsageTrackers
+    let pass: CPUPass
     
     public func accessTexture(_ texture: Texture) {
-        trackers[texture].usages.append(.cpuAccess(pass))
+        texture.usages.append(.cpuPassAccess(pass))
     }
 }

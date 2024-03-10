@@ -1,7 +1,7 @@
 import Foundation
 import Metal
 
-public class FramesContext {
+public final class FramesContext {
     private let instance: Instance
     
     init(instance: Instance) {

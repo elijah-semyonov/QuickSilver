@@ -1,11 +1,14 @@
 import Foundation
 
-public struct RenderPassResourceUsageRecorder: ~Copyable {
+public struct RenderPassResourceUsageRecorder {
     let pass: RenderPass
-    let trackers: FrameResourceUsageTrackers
     
+    public func readTexture(_ texture: Texture, stage: RenderStage) {        
+        texture.usages.append(.renderPassRead(pass, stage: stage))
+        pass.readResource(resource: .texture(texture), at: stage)
+    }
     
-    public func readTexture(_ texture: Texture, stage: RenderStage) {
-        trackers[texture].usages.append(.read(pass, stage: stage))
+    public func writeTexture(_ texture: Texture, stage: RenderStage) {
+        texture.usages.append(.renderPassWrite(pass, stage: stage))
     }
 }

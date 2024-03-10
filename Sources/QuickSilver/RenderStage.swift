@@ -1,6 +1,6 @@
 import Foundation
 
-public enum RenderStage: UInt8, Comparable {
+public enum RenderStage: UInt8, Comparable, Hashable {
     case vertex = 0
     case fragment = 1
     
