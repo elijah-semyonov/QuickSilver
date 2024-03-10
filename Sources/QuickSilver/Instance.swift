@@ -4,8 +4,7 @@ import Metal
 public class Instance {
     public let device: MTLDevice
     public let library: MTLLibrary
-    
-    private let allocator = MonotonicAllocator(byteCount: .mebibytes(10))    
+            
     private var functions = Cache<FunctionDescriptor, MTLFunction>()
     private var renderPipelineStates = Cache<RenderPipelineDescriptor, MTLRenderPipelineState>()
     
@@ -15,9 +14,11 @@ public class Instance {
     }
     
     public func executeFrame(_ closure: (Frame) -> Void) {
-        let frame = Frame(instance: self, allocator: allocator)
+        let frame = Frame(instance: self, framesContext: nil)
         
         closure(frame)
+        
+        frame.run()
     }
     
     public func renderPipelineState(describedBy descriptor: RenderPipelineDescriptor) async -> RenderPipelineState {
