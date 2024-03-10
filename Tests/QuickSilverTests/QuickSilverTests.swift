@@ -40,8 +40,8 @@ final class QuickSilverTests: XCTestCase {
             )
             
             frame.addRenderPass(renderTarget: renderTarget) { usageRecorder in
-                
-            } recordCommands: { recorder in
+                // empty
+            } encodeCommands: { recorder in
                 recorder.setRenderPipelineState(renderPipelineState)
 
                 recorder.drawPrimitives(vertexCount: 6)
