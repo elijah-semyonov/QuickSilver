@@ -23,7 +23,6 @@ public final class Frame {
         )
         passes.append(.renderPass(pass))
         
-
         recordUsage(RenderPassResourceUsageRecorder(pass: pass))
     }
     
