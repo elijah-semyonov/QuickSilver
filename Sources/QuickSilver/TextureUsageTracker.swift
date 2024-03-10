@@ -17,5 +17,5 @@ final class TextureUsageTracker {
         self.pixelFormat = pixelFormat
         
         textureType = .type2D
-    }
+    }        
 }

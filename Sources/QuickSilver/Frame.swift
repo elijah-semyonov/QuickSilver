@@ -30,7 +30,8 @@ public final class Frame {
         let pass = RenderPass(renderTarget: renderTarget, allocator: allocator)
         passes.append(.renderPass(pass))
         
-        recordUsage(&pass.usageRecorder)
+//        let usageRecorder = RenderPassResourceUsageRecorder()
+//        recordUsage(&pass.usageRecorder)
         recordCommands(&pass.commandRecorder)
     }
     
@@ -41,7 +42,7 @@ public final class Frame {
         let pass = CPUPass(allocator: allocator, invoke: invoke)
         passes.append(.cpuPass(pass))
         
-        recordUsage(&pass.resourceUsageRecorder)
+        //let recorder = CPUPassResourceUsageRecorder(pass: pass, trackers: frameResourceUsageTrackers)
     }
     
     public func makeTexture(width: Int, height: Int, pixelFormat: MTLPixelFormat) -> Texture {        

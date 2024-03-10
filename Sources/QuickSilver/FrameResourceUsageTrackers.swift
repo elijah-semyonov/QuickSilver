@@ -1,6 +1,6 @@
 import Foundation
 
-struct FrameResourceUsageTrackers: ~Copyable {
+class FrameResourceUsageTrackers {
     private var textures: [Texture: TextureUsageTracker] = [:]
     
     subscript(_ texture: Texture) -> TextureUsageTracker {
@@ -13,7 +13,7 @@ struct FrameResourceUsageTrackers: ~Copyable {
         }
     }
     
-    mutating func register(_ tracker: TextureUsageTracker) -> Texture {
+    func register(_ tracker: TextureUsageTracker) -> Texture {
         let texture = Texture(id: textures.count)
         
         textures[texture] = tracker
