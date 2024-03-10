@@ -2,13 +2,13 @@ import Foundation
 import Metal
 
 public struct CPUPassResources {
-    let textures: [Texture: MTLTexture] = [:]
-    
     public func withMetalTexture<T>(definedBy texture: Texture, _ closure: (MTLTexture) -> T) -> T {
-        guard let mtlTexture = textures[texture] else {
-            fatalError("CPUPass used \(texture) without prior declaration")
+        let result = texture.materialized.map(closure)
+        
+        guard let result else {
+            fatalError("CPUPass accessed a texture that wasn't materialized")
         }
         
-        return closure(mtlTexture)
+        return result
     }
 }

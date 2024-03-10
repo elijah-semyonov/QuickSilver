@@ -6,7 +6,7 @@ private struct RenderPassResourceBindingSlot: Hashable {
     let index: Int
 }
 
-private struct RenderPassBufferBinding {
+private struct RenderPassBufferBindingValue {
     let buffer: MTLBuffer
     let offset: Int
 }
@@ -14,34 +14,102 @@ private struct RenderPassBufferBinding {
 public struct RenderPassCommandEncoder: ~Copyable {
     let encoder: MTLRenderCommandEncoder
     
-    private var boundBuffers: [RenderPassResourceBindingSlot: RenderPassBufferBinding] = [:]
+    private var boundBuffers: [RenderPassResourceBindingSlot: RenderPassBufferBindingValue] = [:]
+    private var boundTextures: [RenderPassResourceBindingSlot: Texture] = [:]
     
     public func setRenderPipelineState(_ state: RenderPipelineState) {
         encoder.setRenderPipelineState(state.wrapped)
     }
     
-    public func setVertexBuffer(_ buffer: Buffer, offset: Int, index: Int) {
+    public func drawPrimitives(type: PrimitiveType = .triangle, vertexStart: Int = 0, vertexCount: Int, instancing: DrawInstancing? = nil) {
+        let type = MTLPrimitiveType(type)
+        
+        if let instancing {
+            if let base = instancing.base {
+                encoder.drawPrimitives(type: type, vertexStart: vertexStart, vertexCount: vertexCount, instanceCount: instancing.count, baseInstance: base)
+            } else {
+                encoder.drawPrimitives(type: type, vertexStart: vertexStart, vertexCount: vertexCount, instanceCount: instancing.count)
+            }
+        } else {
+            encoder.drawPrimitives(type: type, vertexStart: vertexStart, vertexCount: vertexCount)
+        }
+    }
+    
+    public mutating func setVertexBuffer(_ buffer: Buffer, offset: Int, index: Int) {
         setBuffer(buffer, stage: .vertex, offset: offset, index: index)
     }
     
-    public func setVertexTexture(_ texture: Texture, index: Int) {
-        //commands.append(.setVertexTexture(SetTextureArgs(texture: texture, index: index)))
+    public mutating func setVertexTexture(_ texture: Texture, index: Int) {
+        setTexture(texture, stage: .vertex, index: index)
     }
     
-    public func setFragmentBuffer(_ buffer: Buffer, offset: Int, index: Int) {
-        //commands.append(.setFragmentBuffer(SetBuffe/*rArgs(buffer: buffer, offset: offset, index: index)))*/
+    public mutating func setFragmentBuffer(_ buffer: Buffer, offset: Int, index: Int) {
+        setBuffer(buffer, stage: .fragment, offset: offset, index: index)
     }
     
-    public func setFragmentTexture(_ texture: Texture, index: Int) {
-        //commands.append(.setFragmentT/*exture(SetTextureArgs(texture: texture, index: index)))*/
+    public mutating func setFragmentTexture(_ texture: Texture, index: Int) {
+        setTexture(texture, stage: .vertex, index: index)
     }
     
-    public func drawPrimitives(type: PrimitiveType = .triangle, vertexStart: Int = 0, vertexCount: Int, instancing: DrawInstancing? = nil) {
-        //commands.append/*(.drawPrimitives(DrawPrimitiveArgs(primitiveType: type, vertexStart: vertexStart, vertexCount: vertexCount, instancing: instancing)))*/
-    }
-    
-    func setBuffer(_ buffer: Buffer, stage: RenderStage, offset: Int, index: Int) {
+    mutating private func setBuffer(_ buffer: Buffer, stage: RenderStage, offset: Int, index: Int) {
+        guard let materialized = buffer.materialized else {
+            fatalError("RenderPass bound a buffer that wasn't materialized")
+        }
         
+        let targetOffset = materialized.offset + offset
+        
+        let slot = RenderPassResourceBindingSlot(stage: stage, index: index)
+        let newValue = RenderPassBufferBindingValue(buffer: materialized.buffer, offset: materialized.offset + targetOffset)
+        
+        if let oldValue = boundBuffers[slot] {
+            if oldValue.buffer !== newValue.buffer {
+                bind(newValue, to: slot)
+            } else if oldValue.offset != newValue.offset {
+                bind(newValue, to: slot, onlyOffset: true)
+            }
+        } else {
+            bind(newValue, to: slot)
+        }
+    }
+    
+    mutating private func bind(_ value: RenderPassBufferBindingValue, to slot: RenderPassResourceBindingSlot, onlyOffset: Bool = false) {
+        boundBuffers[slot] = value
+        
+        switch slot.stage {
+        case .vertex:
+            if onlyOffset {
+                encoder.setVertexBufferOffset(value.offset, index: slot.index)
+            } else {
+                encoder.setVertexBuffer(value.buffer, offset: value.offset, index: slot.index)
+            }
+        case .fragment:
+            if onlyOffset {
+                encoder.setFragmentBufferOffset(value.offset, index: slot.index)
+            } else {
+                encoder.setFragmentBuffer(value.buffer, offset: value.offset, index: slot.index)
+            }
+        }
+    }
+    
+    mutating private func setTexture(_ texture: Texture, stage: RenderStage, index: Int) {
+        let slot = RenderPassResourceBindingSlot(stage: stage, index: index)
+        
+        if let oldTexture = boundTextures[slot], oldTexture == texture {
+            // do nothing
+        } else {
+            guard let materialized = texture.materialized else {
+                fatalError("RenderPass bound a texture that wasn't materialized")
+            }
+            
+            boundTextures[slot] = texture
+            
+            switch slot.stage {
+            case .vertex:
+                encoder.setVertexTexture(materialized, index: index)
+            case .fragment:
+                encoder.setFragmentTexture(materialized, index: index)
+            }
+        }
     }
 }
 
