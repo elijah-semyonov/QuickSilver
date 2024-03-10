@@ -3,13 +3,14 @@ import Foundation
 final class RenderPass {
     var commandRecorder: RenderPassCommandRecorder
     
+    var readResources: [Resource: RenderStage] = [:]
+    var writtenResources: [Resource: RenderStage] = [:]
+    
     private let renderTarget: RenderTarget
-    private let allocator: Allocator
 
-    init(renderTarget: RenderTarget, allocator: Allocator) {
+    init(renderTarget: RenderTarget) {
         self.renderTarget = renderTarget
-        self.allocator = allocator
         
-        commandRecorder = RenderPassCommandRecorder(allocator: allocator)
+        commandRecorder = RenderPassCommandRecorder()
     }
 }

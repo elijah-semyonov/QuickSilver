@@ -5,21 +5,12 @@ public final class Frame {
     private let instance: Instance
     private var passes: [Pass] = []
     private let framesContext: FramesContext
-    private let allocator: Allocator
     private var frameResourceUsageTrackers = FrameResourceUsageTrackers()
     
     init(instance: Instance, framesContext: FramesContext?) {
         self.instance = instance
-        
-        let allocator: Allocator
-        if let framesContext {
-            allocator = framesContext.allocator
-        } else {
-            allocator = SystemAllocator()
-        }
-        
-        self.allocator = allocator
-        self.framesContext = FramesContext(instance: instance, allocator: allocator)
+                
+        self.framesContext = FramesContext(instance: instance)
     }
     
     public func addRenderPass(
@@ -27,7 +18,7 @@ public final class Frame {
         recordUsage: (inout RenderPassResourceUsageRecorder) -> Void,
         recordCommands: (inout RenderPassCommandRecorder) -> Void
     ) {
-        let pass = RenderPass(renderTarget: renderTarget, allocator: allocator)
+        let pass = RenderPass(renderTarget: renderTarget)
         passes.append(.renderPass(pass))
         
 //        let usageRecorder = RenderPassResourceUsageRecorder()
@@ -39,7 +30,7 @@ public final class Frame {
         recordUsage: (inout CPUPassResourceUsageRecorder) -> Void,
         invoke: @escaping (CPUPassResources) -> Void
     ) {
-        let pass = CPUPass(allocator: allocator, invoke: invoke)
+        let pass = CPUPass(invoke: invoke)
         passes.append(.cpuPass(pass))
         
         //let recorder = CPUPassResourceUsageRecorder(pass: pass, trackers: frameResourceUsageTrackers)
@@ -57,7 +48,7 @@ public final class Frame {
     }
     
     public func makeBuffer() -> Buffer {
-        return Buffer()
+        fatalError()
     }
     
     func run() {
