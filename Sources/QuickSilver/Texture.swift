@@ -1,9 +1,9 @@
 import Foundation
 
 public struct Texture: Hashable {
-    let index: Int
+    let id: Int
     
-    init(index: Int) {
-        self.index = index
+    init(id: Int) {
+        self.id = id
     }
 }

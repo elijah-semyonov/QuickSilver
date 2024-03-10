@@ -5,7 +5,6 @@ public class FramesContext {
     let allocator: Allocator
     
     private let instance: Instance
-    private var currentFrameTextures: [TextureUsageTracker] = []
     
     init(instance: Instance) {
         self.instance = instance
@@ -19,25 +18,9 @@ public class FramesContext {
     
     public func executeFrame(_ closure: (Frame) -> Void) {
         let frame = Frame(instance: instance, framesContext: self)
-        currentFrameTextures = []
         
         closure(frame)
         
         frame.run()
-    }
-    
-    func makeTexture(width: Int, height: Int, pixelFormat: MTLPixelFormat) -> Texture {
-        let texture = Texture(index: currentFrameTextures.count)
-        
-        currentFrameTextures.append(
-            TextureUsageTracker(
-                width: width,
-                height: height,
-                depth: 1,
-                pixelFormat: pixelFormat
-            )
-        )
-        
-        return texture
     }
 }

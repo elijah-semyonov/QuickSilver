@@ -7,6 +7,7 @@ final class TextureUsageTracker {
     let depth: Int
     let pixelFormat: MTLPixelFormat
     let textureType: MTLTextureType
+    var usages: [TextureUsageRecord] = []
     var mtlTexture: MTLTexture?
     
     init(width: Int, height: Int, depth: Int, pixelFormat: MTLPixelFormat) {

@@ -23,7 +23,7 @@ final class QuickSilverTests: XCTestCase {
                 vertexFunction: .named("test_vs"),
                 fragmentFunction: .named("test_fs"),
                 renderTarget: RenderPipelineTarget(colorAttachments: [
-                    0: RenderPipelineColorAttachment(pixelFormat: .bgra8Unorm, isBlendingEnabled: false)
+                    0: RenderPipelineColorAttachment(pixelFormat: .bgra8Unorm_srgb, isBlendingEnabled: false)
                 ])
             )
         )
@@ -39,11 +39,22 @@ final class QuickSilverTests: XCTestCase {
                 stencilAttachment: nil
             )
             
-            frame.addRenderPass(renderTarget: renderTarget) { pass in
-                pass.setRenderPipelineState(renderPipelineState)
+            frame.addRenderPass(renderTarget: renderTarget) { usageRecorder in
                 
-                pass.drawPrimitives(vertexCount: 6)
+            } recordCommands: { recorder in
+                recorder.setRenderPipelineState(renderPipelineState)
+
+                recorder.drawPrimitives(vertexCount: 6)
             }
+            
+            frame.addCPUPass { usageRecorder in
+                usageRecorder.accessTexture(texture)
+            } invoke: { resources in
+                resources.withMetalTexture(definedBy: texture) { texture in
+                    print(texture)
+                }
+            }
+
         }
     }
 }
