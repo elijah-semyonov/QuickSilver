@@ -3,7 +3,7 @@ import Metal
 
 public final class Frame {
     private let instance: Instance
-    private var passes: [any Pass] = []
+    private var passes: [Pass] = []
     private let framesContext: FramesContext
     private let allocator: Allocator
     
@@ -23,7 +23,7 @@ public final class Frame {
     
     public func addRenderPass(renderTarget: RenderTarget, _ closure: (RenderPass) -> Void) {
         let pass = RenderPass(renderTarget: renderTarget, allocator: allocator)
-        passes.append(pass)
+        passes.append(.renderPass(pass))
                 
         closure(pass)
     }

@@ -30,7 +30,7 @@ final class MonotonicAllocatorTests: XCTestCase {
         for i in 0..<pointers.count {
             dispatchGroup.enter()
             queue.async {
-                pointers[i] = Int(bitPattern: UnsafeRawPointer(allocator.allocate(size: .random(in: 1...5) * 8, alignment: .random(in: 1...2) * 4)))
+                pointers[i] = Int(bitPattern: UnsafeRawPointer(allocator.allocate(byteCount: .random(in: 1...5) * 8, alignment: .random(in: 1...2) * 4)))
                 dispatchGroup.leave()
             }
         }

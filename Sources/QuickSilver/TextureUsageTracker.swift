@@ -1,12 +1,13 @@
 import Foundation
 import Metal
 
-final class TextureUsageData {
+final class TextureUsageTracker {
     let width: Int
     let height: Int
     let depth: Int
     let pixelFormat: MTLPixelFormat
     let textureType: MTLTextureType
+    var mtlTexture: MTLTexture?
     
     init(width: Int, height: Int, depth: Int, pixelFormat: MTLPixelFormat) {
         self.width = width

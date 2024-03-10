@@ -19,12 +19,12 @@ struct DrawPrimitiveArgs {
 }
 
 enum RenderPassCommand {
-    case setRenderPipelineState(UnsafePointer<RenderPipelineState>)
+    case setRenderPipelineState(UnsafeMutablePointer<RenderPipelineState>)
     case drawPrimitives(UnsafePointer<DrawPrimitiveArgs>)
     
     case setVertexBuffer(UnsafePointer<SetBufferArgs>)
     case setVertexTexture(UnsafePointer<SetTextureArgs>)
     
     case setFragmentBuffer(UnsafePointer<SetBufferArgs>)
-    case setFragmentTexture(UnsafePointer<SetTextureArgs>)
+    case setFragmentTexture(UnsafePointer<SetTextureArgs>)         
 }

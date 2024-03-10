@@ -17,7 +17,7 @@ final class MonotonicAllocator: @unchecked Sendable, Allocator {
         ptr.deallocate()
     }
     
-    func allocate(size: Int, alignment: Int) -> UnsafeMutableRawPointer {
+    func allocate(byteCount: Int, alignment: Int) -> UnsafeMutableRawPointer {
         precondition(self.alignment % alignment == 0)
         
         var currentOffset: Int
@@ -28,10 +28,10 @@ final class MonotonicAllocator: @unchecked Sendable, Allocator {
             currentOffset = offset.load(ordering: .relaxed)
             let alignmentMask = alignment - 1
             padding = (alignment - (currentOffset & alignmentMask)) & alignmentMask
-            let totalSize = size + padding
+            let totalSize = byteCount + padding
             newOffset = currentOffset + totalSize
             
-            precondition(newOffset <= byteCount)
+            precondition(newOffset <= self.byteCount)
         } while !offset.compareExchange(expected: currentOffset, desired: newOffset, ordering: .relaxed).exchanged
         
         return ptr.advanced(by: currentOffset + padding)

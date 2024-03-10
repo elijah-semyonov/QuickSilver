@@ -1,8 +1,8 @@
 import Foundation
 
 struct SystemAllocator: Allocator {
-    func allocate(size: Int, alignment: Int) -> UnsafeMutableRawPointer {
-        .allocate(byteCount: size, alignment: alignment)
+    func allocate(byteCount: Int, alignment: Int) -> UnsafeMutableRawPointer {
+        .allocate(byteCount: byteCount, alignment: alignment)
     }
     
     func deallocate(_ ptr: UnsafeRawPointer) {

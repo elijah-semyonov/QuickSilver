@@ -5,7 +5,7 @@ public class FramesContext {
     let allocator: Allocator
     
     private let instance: Instance
-    private var currentFrameTextures: [TextureUsageData] = []
+    private var currentFrameTextures: [TextureUsageTracker] = []
     
     init(instance: Instance) {
         self.instance = instance
@@ -30,7 +30,7 @@ public class FramesContext {
         let texture = Texture(index: currentFrameTextures.count)
         
         currentFrameTextures.append(
-            TextureUsageData(
+            TextureUsageTracker(
                 width: width,
                 height: height,
                 depth: 1,

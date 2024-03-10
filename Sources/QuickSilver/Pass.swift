@@ -1,4 +1,5 @@
 import Foundation
 
-protocol Pass {
+enum Pass {
+    case renderPass(RenderPass)
 }
