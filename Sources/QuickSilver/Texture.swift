@@ -13,7 +13,6 @@ public struct Texture: Hashable {
             return mtlTexture
         }
     }
-        
     
     static func texture2D(width: Int, height: Int, pixelFormat: MTLPixelFormat) -> Self {
         let texture = DeferredTexture()
@@ -26,6 +25,50 @@ public struct Texture: Hashable {
         descriptor.storageMode = .memoryless
         
         return Self(impl: .deferred(texture))
+    }
+    
+    func useAsRenderTarget(loadsOrStores: Bool) {
+        ifDeferred { texture in
+            let descriptor = texture.descriptor
+            
+            descriptor.usage = .renderTarget
+            
+            if loadsOrStores && descriptor.storageMode == .memoryless {
+                descriptor.storageMode = .private
+            }
+        }
+    }
+    
+    func readInShader() {
+        ifDeferred { texture in
+            let descriptor = texture.descriptor
+            
+            descriptor.usage = .shaderRead
+            
+            if descriptor.storageMode == .memoryless {
+                descriptor.storageMode = .private
+            }
+        }
+    }
+    
+    func writeInShader() {
+        ifDeferred { texture in
+            let descriptor = texture.descriptor
+            
+            descriptor.usage = .shaderWrite
+            
+            if descriptor.storageMode == .memoryless {
+                descriptor.storageMode = .private
+            }
+        }
+    }
+    
+    private func ifDeferred<T>(_ closure: (DeferredTexture) -> T) -> T? {
+        if case .deferred(let deferredTexture) = impl {
+            return closure(deferredTexture)
+        } else {
+            return nil
+        }
     }
 }
 

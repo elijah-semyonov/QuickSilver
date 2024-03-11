@@ -52,18 +52,38 @@ public final class Frame {
         for pass in passes {
             switch pass {
             case .renderPass(let renderPass):
-                for (resource, stage) in renderPass.readResources {
+                for (_, attachment) in renderPass.renderTarget.colorAttachments {
+                    attachment.updateTextureUsage()
+                }
+                
+                if let attachment = renderPass.renderTarget.depthAttachment {
+                    attachment.updateTextureUsage()
+                }
+                
+                if let attachment = renderPass.renderTarget.stencilAttachment {
+                    attachment.updateTextureUsage()
+                }
+                
+                for (resource, _) in renderPass.readResources {
                     switch resource {
                     case .buffer(let buffer):
-                        break
+                        fatalError("\(buffer)")
                     case .texture(let texture):
-                        //texture
-                        break
+                        texture.readInShader()
                     }
                 }
-                break
+                
+                for (resource, _) in renderPass.writtenResources {
+                    switch resource {
+                    case .buffer(let buffer):
+                        fatalError("\(buffer)")
+                    case .texture(let texture):
+                        texture.writeInShader()
+                    }
+                }
+                
             case .cpuPass(let cpuPass):
-                break
+                fatalError("\(cpuPass)")
             }
         }
     }

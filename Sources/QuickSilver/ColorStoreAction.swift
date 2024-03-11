@@ -11,4 +11,18 @@ public enum ColorStoreAction {
     public static var dontCare: Self {
         .storeAction(.dontCare)
     }
+    
+    var isStoreAction: Bool {
+        switch self {
+        case .storeAction(let storeAction):
+            switch storeAction {
+            case .store:
+                true
+            default:
+                false
+            }
+        default:
+            false
+        }
+    }
 }
