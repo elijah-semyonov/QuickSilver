@@ -3,9 +3,9 @@ import Foundation
 final class RenderPass {
     let index: Int
     private(set) var producesSideEffects = false
+    private(set) var readResources: [Resource: RenderStage] = [:]
+    private(set) var writtenResources: [Resource: RenderStage] = [:]
     
-    private var readResources: [Resource: RenderStage] = [:]
-    private var writtenResources: [Resource: RenderStage] = [:]
     private let renderTarget: RenderTarget
     private let encodeCommands: (borrowing RenderPassCommandEncoder) -> Void
 

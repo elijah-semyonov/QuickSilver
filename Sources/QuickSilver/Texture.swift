@@ -1,15 +1,22 @@
 import Foundation
 import Metal
 
-public final class Texture {
-    let descriptor = MTLTextureDescriptor()    
-    var materialized: MTLTexture?
-    
-    private init() {
+public struct Texture: Hashable {
+    let impl: TextureImpl
+    var mtlTexture: MTLTexture {
+        switch impl {
+        case .deferred(let deferredTexture):
+            guard let mtlTexture = deferredTexture.materialized else {
+                fatalError("DeferredTexture is accessed before it is materialized")
+            }
+            
+            return mtlTexture
+        }
     }
+        
     
     static func texture2D(width: Int, height: Int, pixelFormat: MTLPixelFormat) -> Self {
-        let texture = Self()
+        let texture = DeferredTexture()
         
         let descriptor = texture.descriptor
         descriptor.width = width
@@ -18,16 +25,25 @@ public final class Texture {
         descriptor.textureType = .type2D
         descriptor.storageMode = .memoryless
         
-        return texture
+        return Self(impl: .deferred(texture))
     }
 }
 
-extension Texture: Hashable {
-    public static func == (lhs: Texture, rhs: Texture) -> Bool {
+final class DeferredTexture {
+    let descriptor = MTLTextureDescriptor()
+    var materialized: MTLTexture?
+}
+
+extension DeferredTexture: Hashable {
+    static func == (lhs: DeferredTexture, rhs: DeferredTexture) -> Bool {
         lhs === rhs
     }
     
-    public func hash(into hasher: inout Hasher) {
+    func hash(into hasher: inout Hasher) {
         hasher.combine(ObjectIdentifier(self))
     }
+}
+
+enum TextureImpl: Hashable {
+    case deferred(DeferredTexture)
 }

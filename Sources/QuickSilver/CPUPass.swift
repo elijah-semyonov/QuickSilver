@@ -3,10 +3,10 @@ import Foundation
 final class CPUPass {
     let index: Int
     private(set) var producesSideEffects = false
+    private(set) var readResources: Set<Resource> = []
+    private(set) var writtenResources: Set<Resource> = []
     
     private let invoke: (CPUPassResources) -> Void
-    private var readResources: Set<Resource> = []
-    private var writtenResources: Set<Resource> = []
     
     init(index: Int, invoke: @escaping (CPUPassResources) -> Void) { 
         self.index = index

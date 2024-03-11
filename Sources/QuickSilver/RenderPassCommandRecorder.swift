@@ -97,17 +97,15 @@ public struct RenderPassCommandEncoder: ~Copyable {
         if let oldTexture = boundTextures[slot], oldTexture == texture {
             // do nothing
         } else {
-            guard let materialized = texture.materialized else {
-                fatalError("RenderPass bound a texture that wasn't materialized")
-            }
+            let mtlTexture = texture.mtlTexture
             
             boundTextures[slot] = texture
             
             switch slot.stage {
             case .vertex:
-                encoder.setVertexTexture(materialized, index: index)
+                encoder.setVertexTexture(mtlTexture, index: index)
             case .fragment:
-                encoder.setFragmentTexture(materialized, index: index)
+                encoder.setFragmentTexture(mtlTexture, index: index)
             }
         }
     }

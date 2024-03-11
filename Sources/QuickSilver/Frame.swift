@@ -49,6 +49,22 @@ public final class Frame {
     }
     
     func run() {
-        // Find passes with side effects
+        for pass in passes {
+            switch pass {
+            case .renderPass(let renderPass):
+                for (resource, stage) in renderPass.readResources {
+                    switch resource {
+                    case .buffer(let buffer):
+                        break
+                    case .texture(let texture):
+                        //texture
+                        break
+                    }
+                }
+                break
+            case .cpuPass(let cpuPass):
+                break
+            }
+        }
     }
 }
