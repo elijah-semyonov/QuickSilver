@@ -1,6 +1,6 @@
 import Foundation
 
-enum Pass {
+enum Pass: Hashable {
     case renderPass(RenderPass)
     case cpuPass(CPUPass)
 }

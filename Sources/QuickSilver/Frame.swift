@@ -4,7 +4,7 @@ import Metal
 public final class Frame {
     private let instance: Instance
     private var passes: [Pass] = []
-    private let framesContext: FramesContext    
+    private let framesContext: FramesContext
     
     init(instance: Instance, framesContext: FramesContext?) {
         self.instance = instance
@@ -18,6 +18,7 @@ public final class Frame {
         encodeCommands: @escaping (borrowing RenderPassCommandEncoder) -> Void
     ) {
         let pass = RenderPass(
+            index: passes.count,
             renderTarget: renderTarget,
             encodeCommands: encodeCommands
         )
@@ -30,7 +31,10 @@ public final class Frame {
         recordUsage: (borrowing CPUPassResourceUsageRecorder) -> Void,
         invoke: @escaping (CPUPassResources) -> Void
     ) {
-        let pass = CPUPass(invoke: invoke)
+        let pass = CPUPass(
+            index: passes.count,
+            invoke: invoke
+        )
         passes.append(.cpuPass(pass))
                 
         recordUsage(CPUPassResourceUsageRecorder(pass: pass))
@@ -45,5 +49,6 @@ public final class Frame {
     }
     
     func run() {
+        // Find passes with side effects
     }
 }

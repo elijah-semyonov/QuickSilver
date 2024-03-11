@@ -48,9 +48,10 @@ final class QuickSilverTests: XCTestCase {
             }
             
             frame.addCPUPass { usageRecorder in
-                usageRecorder.accessTexture(texture)
+                usageRecorder.readTexture(texture)
+                usageRecorder.produceSideEffects()
             } invoke: { resources in
-                resources.withMetalTexture(definedBy: texture) { texture in
+                resources.accessTexture(texture) { texture in
                     print(texture)
                 }
             }

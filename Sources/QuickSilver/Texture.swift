@@ -1,16 +1,11 @@
 import Foundation
 import Metal
 
-public final class Texture: Hashable {
-    let descriptor = MTLTextureDescriptor()
-    var usages: [TextureUsageRecord] = []
+public final class Texture {
+    let descriptor = MTLTextureDescriptor()    
     var materialized: MTLTexture?
     
     private init() {
-    }
-    
-    public static func == (lhs: Texture, rhs: Texture) -> Bool {
-        lhs === rhs
     }
     
     static func texture2D(width: Int, height: Int, pixelFormat: MTLPixelFormat) -> Self {
@@ -24,6 +19,12 @@ public final class Texture: Hashable {
         descriptor.storageMode = .memoryless
         
         return texture
+    }
+}
+
+extension Texture: Hashable {
+    public static func == (lhs: Texture, rhs: Texture) -> Bool {
+        lhs === rhs
     }
     
     public func hash(into hasher: inout Hasher) {

@@ -1,17 +1,26 @@
 import Foundation
 
 final class RenderPass {
+    let index: Int
+    private(set) var producesSideEffects = false
+    
     private var readResources: [Resource: RenderStage] = [:]
     private var writtenResources: [Resource: RenderStage] = [:]
     private let renderTarget: RenderTarget
     private let encodeCommands: (borrowing RenderPassCommandEncoder) -> Void
 
     init(
+        index: Int,
         renderTarget: RenderTarget,
         encodeCommands: @escaping (borrowing RenderPassCommandEncoder) -> Void
     ) {
+        self.index = index
         self.renderTarget = renderTarget
         self.encodeCommands = encodeCommands
+    }
+    
+    func produceSideEffects() {
+        producesSideEffects = true
     }
     
     func readResource(resource: Resource, at stage: RenderStage) {
@@ -32,5 +41,15 @@ final class RenderPass {
         } else {
             writtenResources[resource] = stage
         }
+    }
+}
+
+extension RenderPass: Hashable {
+    static func == (lhs: RenderPass, rhs: RenderPass) -> Bool {
+        lhs === rhs
+    }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(ObjectIdentifier(self))
     }
 }
