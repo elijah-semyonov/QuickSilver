@@ -23,7 +23,10 @@ final class QuickSilverTests: XCTestCase {
                 vertexFunction: .named("test_vs"),
                 fragmentFunction: .named("test_fs"),
                 renderTarget: RenderPipelineTarget(colorAttachments: [
-                    0: RenderPipelineColorAttachment(pixelFormat: .bgra8Unorm_srgb, isBlendingEnabled: false)
+                    0: RenderPipelineColorAttachment(
+                        pixelFormat: .bgra8Unorm_srgb,
+                        isBlendingEnabled: false
+                    )
                 ])
             )
         )
@@ -33,7 +36,10 @@ final class QuickSilverTests: XCTestCase {
             
             let renderTarget = RenderTarget(
                 colorAttachments: [
-                    0: ColorAttachment(texture: texture, storeAction: .storeAction(.store), loadAction: .clear(.init(red: 1.0, green: 1.0, blue: 1.0, alpha: 1.0)))
+                    0: ColorAttachment(
+                        texture: texture,
+                        storeAction: .store,
+                        loadAction: .clear(red: 1.0, green: 1.0, blue: 1.0, alpha: 1.0))
                 ],
                 depthAttachment: nil,
                 stencilAttachment: nil
