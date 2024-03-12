@@ -18,15 +18,15 @@ public final class Frame {
         recordUsage: (borrowing RenderPassResourceUsageRecorder) -> Void,
         encodeCommands: @escaping (borrowing RenderPassCommandEncoder) -> Void
     ) {
-        let pass = RenderPass(
-            index: passes.count,
-            renderTarget: renderTarget, 
-            name: name,
-            encodeCommands: encodeCommands
+        passes.append(
+            RenderPass(
+                index: passes.count,
+                renderTarget: renderTarget,
+                name: name,
+                recordUsage: recordUsage,
+                encodeCommands: encodeCommands
+            )
         )
-        passes.append(.renderPass(pass))
-        
-        recordUsage(RenderPassResourceUsageRecorder(pass: pass))
     }
     
     public func addCPUPass(
@@ -34,14 +34,14 @@ public final class Frame {
         recordUsage: (borrowing CPUPassResourceUsageRecorder) -> Void,
         invoke: @escaping (CPUPassResources) -> Void
     ) {
-        let pass = CPUPass(
-            index: passes.count,
-            name: name,
-            invoke: invoke
+        passes.append(
+            CPUPass(
+                index: passes.count,
+                name: name,
+                recordUsage: recordUsage,
+                invoke: invoke
+            )
         )
-        passes.append(.cpuPass(pass))
-                
-        recordUsage(CPUPassResourceUsageRecorder(pass: pass))
     }
     
     public func makeTexture(width: Int, height: Int, pixelFormat: MTLPixelFormat) -> Texture {        
@@ -54,99 +54,27 @@ public final class Frame {
     
     func execute() {
         for pass in passes {
-            switch pass {
-            case .renderPass(let renderPass):
-                for (_, attachment) in renderPass.renderTarget.colorAttachments {
-                    attachment.updateTextureUsage()
-                }
-                
-                if let attachment = renderPass.renderTarget.depthAttachment {
-                    attachment.updateTextureUsage()
-                }
-                
-                if let attachment = renderPass.renderTarget.stencilAttachment {
-                    attachment.updateTextureUsage()
-                }
-                
-                for (resource, _) in renderPass.readResources {
-                    switch resource {
-                    case .buffer(let buffer):
-                        fatalError("\(buffer)")
-                    case .texture(let texture):
-                        texture.readInShader()
-                    }
-                }
-                
-                for (resource, _) in renderPass.writtenResources {
-                    switch resource {
-                    case .buffer(let buffer):
-                        fatalError("\(buffer)")
-                    case .texture(let texture):
-                        texture.writeInShader()
-                    }
-                }
-                
-            case .cpuPass(let cpuPass):
-                for resource in cpuPass.readResources {
-                    switch resource {
-                    case .buffer(let buffer):
-                        fatalError("\(buffer)")
-                    case .texture(let texture):
-                        texture.accessByCpu()
-                    }
-                }
-                
-                for resource in cpuPass.writtenResources {
-                    switch resource {
-                    case .buffer(let buffer):
-                        fatalError("\(buffer)")
-                    case .texture(let texture):
-                        texture.accessByCpu()
-                    }
-                }
-            }
+            pass.updateResourceUsage()
         }
         
-        var passes = Set(passes)
-        var levels: [Set<Pass>] = []
+        var passes = Set(passes.map { PassHashableWrapper.wrapping($0) })
+        var levels: [Set<PassHashableWrapper>] = []
         var resolvedResources: Set<Resource> = []
         
         while true {
-            var currentLevel: Set<Pass> = []
+            var currentLevel: Set<PassHashableWrapper> = []
             var levelResolvedResources: Set<Resource> = []
-                        
-            for pass in passes {
-                switch pass {
-                case .cpuPass(let cpuPass):
-                    let resolved = cpuPass.readResources.allSatisfy { resource in
-                        resolvedResources.contains(resource)
-                    }
+            
+            for wrapper in passes {
+                let resolved = wrapper.pass.allResourcesSatisfy(kind: .read) { resource in
+                    resolvedResources.contains(resource)
+                }
+                
+                if resolved {
+                    currentLevel.insert(wrapper)
                     
-                    if resolved {
-                        currentLevel.insert(pass)
-                        
-                        for resource in cpuPass.writtenResources {
-                            let (inserted, _) = levelResolvedResources.insert(resource)
-                            assert(inserted)
-                        }
-                    }
-                case .renderPass(let renderPass):
-                    let resolved = renderPass.readResources.allSatisfy { resource, _ in
-                        resolvedResources.contains(resource)
-                    }
-                    
-                    if resolved {
-                        currentLevel.insert(pass)
-                        
-                        renderPass.renderTarget.forEachWrittenAttachmentTexture { texture in
-                            let (inserted, _) = levelResolvedResources.insert(.texture(texture))
-                            assert(inserted)
-                        }
-                        
-                        for (resource, _) in renderPass.writtenResources {
-                            let (inserted, _) = levelResolvedResources.insert(resource)
-                            assert(inserted)
-                        }
+                    wrapper.pass.forEachResource(ofKind: .written) { resource in
+                        levelResolvedResources.insert(resource)
                     }
                 }
             }
@@ -168,5 +96,7 @@ public final class Frame {
         }
         
         precondition(passes.count == 0)
+        
+        debugPrint(levels)
     }
 }

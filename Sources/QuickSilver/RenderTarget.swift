@@ -43,6 +43,50 @@ public struct RenderTarget {
         self.stencilAttachment = stencilAttachment
     }
     
+    func updateTextureUsage() {
+        for (_, attachment) in colorAttachments {
+            attachment.updateTextureUsage()
+        }
+        
+        if let attachment = depthAttachment {
+            attachment.updateTextureUsage()
+        }
+        
+        if let attachment = stencilAttachment {
+            attachment.updateTextureUsage()
+        }
+        
+    }
+    
+    func forEachReadAttachmentTexture(_ closure: (Texture) -> Void) {
+        for attachment in colorAttachments.values {
+            switch attachment.loadAction {
+            case .load:
+                closure(attachment.texture)
+            case .dontCare, .clear:
+                break
+            }
+        }
+        
+        if let attachment = depthAttachment {
+            switch attachment.loadAction {
+            case .load:
+                closure(attachment.texture)
+            case .dontCare, .clear:
+                break
+            }
+        }
+        
+        if let attachment = stencilAttachment {
+            switch attachment.loadAction {
+            case .load:
+                closure(attachment.texture)
+            case .dontCare, .clear:
+                break
+            }
+        }
+    }
+    
     func forEachWrittenAttachmentTexture(_ closure: (Texture) -> Void) {
         for attachment in colorAttachments.values {
             switch attachment.storeAction {
