@@ -52,7 +52,7 @@ public final class Frame {
         fatalError()
     }
     
-    func run() {
+    func execute() {
         for pass in passes {
             switch pass {
             case .renderPass(let renderPass):
@@ -168,39 +168,5 @@ public final class Frame {
         }
         
         precondition(passes.count == 0)
-        
-        for (index, level) in levels.enumerated() {
-            let names = level.map { pass in
-                switch pass {
-                case .cpuPass(let pass):
-                    let name = pass.name.map {
-                        "'\($0)'"
-                    }
-                    
-                    return [
-                        "CPUPass",
-                        name,
-                        "#\(pass.index)"
-                    ].compactMap { $0 }.joined(separator: " ")
-                case .renderPass(let pass):
-                    let name = pass.name.map {
-                        "'\($0)'"
-                    }
-                    
-                    return [
-                        "RenderPass",
-                        name,
-                        "#\(pass.index)"
-                    ].compactMap { $0 }.joined(separator: " ")
-                }
-            }.joined(separator: ", ")
-            
-            print(
-                """
-                Level \(index):
-                \(names)
-                """
-            )
-        }
     }
 }

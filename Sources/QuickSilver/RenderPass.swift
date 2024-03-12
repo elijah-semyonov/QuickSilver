@@ -10,7 +10,7 @@ final class RenderPass {
     }
     
     private(set) var readResources: [Resource: RenderStage] = [:]
-    private(set) var writtenResources: [Resource: RenderStage] = [:]
+    private(set) var writtenResources: [Resource: RenderStage] = [:]    
         
     private let encodeCommands: (borrowing RenderPassCommandEncoder) -> Void
 

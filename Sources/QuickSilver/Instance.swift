@@ -18,7 +18,7 @@ public class Instance {
         
         closure(frame)
         
-        frame.run()
+        frame.execute()
     }
     
     public func renderPipelineState(describedBy descriptor: RenderPipelineDescriptor) async -> RenderPipelineState {

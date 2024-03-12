@@ -13,6 +13,6 @@ public final class FramesContext {
         
         closure(frame)
         
-        frame.run()
+        frame.execute()
     }
 }
