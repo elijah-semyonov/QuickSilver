@@ -1,10 +1,6 @@
 public struct CPUPassResourceUsageRecorder: ~Copyable {
     let pass: CPUPass
     
-    public func produceSideEffects() {
-        pass.produceSideEffects()
-    }
-    
     public func readTexture(_ texture: Texture) {
         pass.readResource(.texture(texture))
     }

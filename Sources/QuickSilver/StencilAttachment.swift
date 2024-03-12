@@ -6,6 +6,17 @@ public struct StencilAttachment {
     public let storeAction: StoreAction
     
     public func updateTextureUsage() {
-        texture.useAsRenderTarget(loadsOrStores: storeAction == .store || loadAction.isLoadAction)
+        let loads = switch loadAction {
+        case .clear:
+            false
+        case .load:
+            true
+        case .dontCare:
+            false
+        }
+        
+        let stores = storeAction == .store
+        
+        texture.useAsRenderTarget(loadsOrStores: loads || stores)
     }
 }

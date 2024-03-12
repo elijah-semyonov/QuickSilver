@@ -2,19 +2,20 @@ import Foundation
 
 final class CPUPass {
     let index: Int
-    private(set) var producesSideEffects = false
+    let name: String?
+    var dependsOnNothing: Bool {
+        readResources.isEmpty
+    }
+    
     private(set) var readResources: Set<Resource> = []
     private(set) var writtenResources: Set<Resource> = []
     
     private let invoke: (CPUPassResources) -> Void
     
-    init(index: Int, invoke: @escaping (CPUPassResources) -> Void) { 
+    init(index: Int, name: String?, invoke: @escaping (CPUPassResources) -> Void) { 
         self.index = index
         self.invoke = invoke
-    }
-    
-    func produceSideEffects() {
-        producesSideEffects = true
+        self.name = name
     }
     
     func readResource(_ resource: Resource) {

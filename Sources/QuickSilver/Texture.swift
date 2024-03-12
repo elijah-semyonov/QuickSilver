@@ -27,6 +27,16 @@ public struct Texture: Hashable {
         return Self(impl: .deferred(texture))
     }
     
+    func accessByCpu() {
+        ifDeferred { texture in
+            let descriptor = texture.descriptor
+            
+            if descriptor.storageMode != .shared {
+                descriptor.storageMode = .shared
+            }
+        }
+    }
+    
     func useAsRenderTarget(loadsOrStores: Bool) {
         ifDeferred { texture in
             let descriptor = texture.descriptor

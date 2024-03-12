@@ -1,11 +1,7 @@
 import Foundation
 
 public struct RenderPassResourceUsageRecorder {
-    let pass: RenderPass
-    
-    public func produceSideEffects() {
-        pass.produceSideEffects()
-    }
+    let pass: RenderPass        
     
     public func readTexture(_ texture: Texture, stage: RenderStage) {
         pass.readResource(resource: .texture(texture), at: stage)

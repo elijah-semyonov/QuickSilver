@@ -15,7 +15,7 @@ public struct ClearColor {
 }
 
 extension LoadAction<ClearColor> {
-    static func clear(red: Double, green: Double, blue: Double, alpha: Double) -> Self {
+    public static func clear(red: Double, green: Double, blue: Double, alpha: Double) -> Self {
         .clear(ClearValue(red: red, green: green, blue: blue, alpha: alpha))
     }
 }

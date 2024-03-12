@@ -3,7 +3,12 @@ import Foundation
 final class RenderPass {
     let index: Int
     let renderTarget: RenderTarget
-    private(set) var producesSideEffects = false
+    let name: String?
+    
+    var dependsOnNothing: Bool {
+        readResources.isEmpty && !renderTarget.hasAnyLoad
+    }
+    
     private(set) var readResources: [Resource: RenderStage] = [:]
     private(set) var writtenResources: [Resource: RenderStage] = [:]
         
@@ -12,15 +17,13 @@ final class RenderPass {
     init(
         index: Int,
         renderTarget: RenderTarget,
+        name: String?,
         encodeCommands: @escaping (borrowing RenderPassCommandEncoder) -> Void
     ) {
         self.index = index
         self.renderTarget = renderTarget
+        self.name = name
         self.encodeCommands = encodeCommands
-    }
-    
-    func produceSideEffects() {
-        producesSideEffects = true
     }
     
     func readResource(resource: Resource, at stage: RenderStage) {

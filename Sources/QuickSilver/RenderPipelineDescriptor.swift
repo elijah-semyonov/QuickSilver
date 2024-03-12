@@ -2,7 +2,13 @@ import Foundation
 import Metal
 
 public struct RenderPipelineDescriptor: Hashable {
-    let vertexFunction: FunctionDescriptor
-    let fragmentFunction: FunctionDescriptor?    
-    let renderTarget: RenderPipelineTarget
+    public let vertexFunction: FunctionDescriptor
+    public let fragmentFunction: FunctionDescriptor?
+    public let renderTarget: RenderPipelineTarget
+    
+    public init(vertexFunction: FunctionDescriptor, fragmentFunction: FunctionDescriptor?, renderTarget: RenderPipelineTarget) {
+        self.vertexFunction = vertexFunction
+        self.fragmentFunction = fragmentFunction
+        self.renderTarget = renderTarget
+    }
 }

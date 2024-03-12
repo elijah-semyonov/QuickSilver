@@ -13,13 +13,15 @@ public final class Frame {
     }
     
     public func addRenderPass(
+        named name: String? = nil,
         renderTarget: RenderTarget,
         recordUsage: (borrowing RenderPassResourceUsageRecorder) -> Void,
         encodeCommands: @escaping (borrowing RenderPassCommandEncoder) -> Void
     ) {
         let pass = RenderPass(
             index: passes.count,
-            renderTarget: renderTarget,
+            renderTarget: renderTarget, 
+            name: name,
             encodeCommands: encodeCommands
         )
         passes.append(.renderPass(pass))
@@ -28,11 +30,13 @@ public final class Frame {
     }
     
     public func addCPUPass(
+        named name: String? = nil,
         recordUsage: (borrowing CPUPassResourceUsageRecorder) -> Void,
         invoke: @escaping (CPUPassResources) -> Void
     ) {
         let pass = CPUPass(
             index: passes.count,
+            name: name,
             invoke: invoke
         )
         passes.append(.cpuPass(pass))
@@ -83,8 +87,120 @@ public final class Frame {
                 }
                 
             case .cpuPass(let cpuPass):
-                fatalError("\(cpuPass)")
+                for resource in cpuPass.readResources {
+                    switch resource {
+                    case .buffer(let buffer):
+                        fatalError("\(buffer)")
+                    case .texture(let texture):
+                        texture.accessByCpu()
+                    }
+                }
+                
+                for resource in cpuPass.writtenResources {
+                    switch resource {
+                    case .buffer(let buffer):
+                        fatalError("\(buffer)")
+                    case .texture(let texture):
+                        texture.accessByCpu()
+                    }
+                }
             }
+        }
+        
+        var passes = Set(passes)
+        var levels: [Set<Pass>] = []
+        var resolvedResources: Set<Resource> = []
+        
+        while true {
+            var currentLevel: Set<Pass> = []
+            var levelResolvedResources: Set<Resource> = []
+                        
+            for pass in passes {
+                switch pass {
+                case .cpuPass(let cpuPass):
+                    let resolved = cpuPass.readResources.allSatisfy { resource in
+                        resolvedResources.contains(resource)
+                    }
+                    
+                    if resolved {
+                        currentLevel.insert(pass)
+                        
+                        for resource in cpuPass.writtenResources {
+                            let (inserted, _) = levelResolvedResources.insert(resource)
+                            assert(inserted)
+                        }
+                    }
+                case .renderPass(let renderPass):
+                    let resolved = renderPass.readResources.allSatisfy { resource, _ in
+                        resolvedResources.contains(resource)
+                    }
+                    
+                    if resolved {
+                        currentLevel.insert(pass)
+                        
+                        renderPass.renderTarget.forEachWrittenAttachmentTexture { texture in
+                            let (inserted, _) = levelResolvedResources.insert(.texture(texture))
+                            assert(inserted)
+                        }
+                        
+                        for (resource, _) in renderPass.writtenResources {
+                            let (inserted, _) = levelResolvedResources.insert(resource)
+                            assert(inserted)
+                        }
+                    }
+                }
+            }
+            
+            for resource in levelResolvedResources {
+                resolvedResources.insert(resource)
+            }
+            
+            for pass in currentLevel {
+                passes.remove(pass)
+                currentLevel.insert(pass)
+            }
+            
+            if currentLevel.isEmpty {
+                break
+            } else {
+                levels.append(currentLevel)
+            }
+        }
+        
+        precondition(passes.count == 0)
+        
+        for (index, level) in levels.enumerated() {
+            let names = level.map { pass in
+                switch pass {
+                case .cpuPass(let pass):
+                    let name = pass.name.map {
+                        "'\($0)'"
+                    }
+                    
+                    return [
+                        "CPUPass",
+                        name,
+                        "#\(pass.index)"
+                    ].compactMap { $0 }.joined(separator: " ")
+                case .renderPass(let pass):
+                    let name = pass.name.map {
+                        "'\($0)'"
+                    }
+                    
+                    return [
+                        "RenderPass",
+                        name,
+                        "#\(pass.index)"
+                    ].compactMap { $0 }.joined(separator: " ")
+                }
+            }.joined(separator: ", ")
+            
+            print(
+                """
+                Level \(index):
+                \(names)
+                """
+            )
         }
     }
 }
