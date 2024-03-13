@@ -13,12 +13,12 @@ public class Instance {
         self.library = library
     }
     
-    public func executeFrame(_ closure: (Frame) -> Void) {
+    public func executeFrame(_ closure: (Frame) -> Void) async {
         let frame = Frame(instance: self, framesContext: nil)
         
         closure(frame)
         
-        frame.execute()
+        await frame.execute()
     }
     
     public func renderPipelineState(describedBy descriptor: RenderPipelineDescriptor) async -> RenderPipelineState {

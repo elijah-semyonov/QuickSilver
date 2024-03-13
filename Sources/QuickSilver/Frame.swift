@@ -52,7 +52,7 @@ public final class Frame {
         fatalError()
     }
     
-    func execute() {
+    func execute() async {
         for pass in passes {
             pass.updateResourceUsage()
         }

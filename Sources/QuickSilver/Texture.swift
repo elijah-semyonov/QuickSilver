@@ -71,3 +71,13 @@ public struct Texture: Hashable {
 enum TextureImpl: Hashable {
     case deferred(DeferredTexture)
 }
+
+extension MTLRenderCommandEncoder {
+    func setVertexTexture(_ texture: Texture, index: Int) {
+        setVertexTexture(texture.mtlTexture, index: index)
+    }
+    
+    func setFragmentTexture(_ texture: Texture, index: Int) {
+        setFragmentTexture(texture.mtlTexture, index: index)
+    }
+}
