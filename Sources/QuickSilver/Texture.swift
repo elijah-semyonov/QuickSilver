@@ -68,42 +68,6 @@ public struct Texture: Hashable {
     }
 }
 
-enum TextureType: Hashable {
-    case texture2D(width: Int, height: Int)
-}
-
-extension MTLResourceUsage: Hashable {
-}
-
-extension MTLTextureUsage: Hashable {
-}
-
-struct TextureDescriptor: Hashable {
-    let type: TextureType
-    let pixelFormat: MTLPixelFormat
-    var usage: MTLTextureUsage = []
-    var storageMode: MTLStorageMode = .memoryless
-}
-                                
-final class DeferredTexture {
-    var descriptor: TextureDescriptor
-    var materialized: MTLTexture?
-    
-    init(descriptor: TextureDescriptor) {
-        self.descriptor = descriptor
-    }
-}
-
-extension DeferredTexture: Hashable {
-    static func == (lhs: DeferredTexture, rhs: DeferredTexture) -> Bool {
-        lhs === rhs
-    }
-    
-    func hash(into hasher: inout Hasher) {
-        hasher.combine(ObjectIdentifier(self))
-    }
-}
-
 enum TextureImpl: Hashable {
     case deferred(DeferredTexture)
 }
