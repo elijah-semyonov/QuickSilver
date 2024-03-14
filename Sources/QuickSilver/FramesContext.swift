@@ -8,11 +8,11 @@ public final class FramesContext {
         self.instance = instance
     }
     
-    public func executeFrame(_ closure: (Frame) -> Void) async {
+    public func executeFrame(capture: Bool = false, _ closure: (Frame) -> Void) async {
         let frame = Frame(instance: instance, framesContext: self)
         
         closure(frame)
         
-        await frame.execute()
+        await frame.execute(capture: capture)
     }
 }

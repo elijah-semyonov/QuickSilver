@@ -18,7 +18,7 @@ struct DrawPrimitiveArgs {
     let instancing: DrawInstancing?
 }
 
-enum RenderPassCommand {
+enum RenderCommand {
     case setRenderPipelineState(RenderPipelineState)
     case drawPrimitives(DrawPrimitiveArgs)
     

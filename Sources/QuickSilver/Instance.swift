@@ -4,6 +4,7 @@ import Metal
 public class Instance {
     public let device: MTLDevice
     public let library: MTLLibrary
+    let mainCommandQueue: MTLCommandQueue
             
     private var functions = Cache<FunctionDescriptor, MTLFunction>()
     private var renderPipelineStates = Cache<RenderPipelineDescriptor, MTLRenderPipelineState>()
@@ -11,14 +12,20 @@ public class Instance {
     public init(device: MTLDevice, library: MTLLibrary) {
         self.device = device        
         self.library = library
+        
+        guard let mainCommandQueue = device.makeCommandQueue() else {
+            fatalError("makeCommandQueue() returned nil")
+        }
+        
+        self.mainCommandQueue = mainCommandQueue
     }
     
-    public func executeFrame(_ closure: (Frame) -> Void) async {
+    public func executeFrame(capture: Bool = false, _ closure: (Frame) -> Void) async {
         let frame = Frame(instance: self, framesContext: nil)
         
         closure(frame)
         
-        await frame.execute()
+        await frame.execute(capture: capture)
     }
     
     public func renderPipelineState(describedBy descriptor: RenderPipelineDescriptor) async -> RenderPipelineState {

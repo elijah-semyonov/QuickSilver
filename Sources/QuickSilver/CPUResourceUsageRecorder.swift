@@ -1,4 +1,4 @@
-public struct CPUPassResourceUsageRecorder: ~Copyable {
+public struct CPUResourceUsageRecorder: ~Copyable {
     let pass: CPUPass
     
     public func readTexture(_ texture: Texture) {

@@ -15,8 +15,8 @@ public final class Frame {
     public func addRenderPass(
         named name: String? = nil,
         renderTarget: RenderTarget,
-        recordUsage: (borrowing RenderPassResourceUsageRecorder) -> Void,
-        encodeCommands: @escaping (borrowing RenderPassCommandEncoder) -> Void
+        recordUsage: (borrowing RenderResourceUsageRecorder) -> Void,
+        encodeCommands: @escaping (inout RenderCommandEncoder) -> Void
     ) {
         passes.append(
             RenderPass(
@@ -31,8 +31,8 @@ public final class Frame {
     
     public func addCPUPass(
         named name: String? = nil,
-        recordUsage: (borrowing CPUPassResourceUsageRecorder) -> Void,
-        invoke: @escaping (CPUPassResources) -> Void
+        recordUsage: (borrowing CPUResourceUsageRecorder) -> Void,
+        invoke: @escaping (borrowing CPUResources) -> Void
     ) {
         passes.append(
             CPUPass(
@@ -52,7 +52,7 @@ public final class Frame {
         fatalError()
     }
     
-    func execute() async {
+    func execute(capture: Bool) async {
         for pass in passes {
             pass.updateResourceUsage()
         }
@@ -97,6 +97,60 @@ public final class Frame {
         
         precondition(passes.count == 0)
         
-        debugPrint(levels)
+        for resource in resolvedResources {
+            switch resource {
+            case .buffer(let buffer):
+                fatalError("\(buffer)")
+            case .texture(let texture):
+                switch texture.impl {
+                case .deferred(let deferredTexture):
+                    let descriptor = MTLTextureDescriptor()
+                    
+                    descriptor.storageMode = deferredTexture.descriptor.storageMode
+                    descriptor.usage = deferredTexture.descriptor.usage
+                    descriptor.pixelFormat = deferredTexture.descriptor.pixelFormat
+                    switch deferredTexture.descriptor.type {
+                    case .texture2D(let width, let height):
+                        descriptor.width = width
+                        descriptor.height = height
+                    }
+                    
+                    guard let materialized = instance.device.makeTexture(descriptor: descriptor) else {
+                        fatalError("Failed to allocate texture described by \(deferredTexture.descriptor)")
+                    }
+                    
+                    deferredTexture.materialized = materialized
+                }
+            }
+        }
+        
+        let captureManager = MTLCaptureManager.shared()
+                
+        if (capture) {
+            let captureDescriptor = MTLCaptureDescriptor()
+            captureDescriptor.captureObject = instance.mainCommandQueue
+            
+            do {
+                try captureManager.startCapture(with: captureDescriptor)
+            } catch {
+                print("Failed to capture. \(error.localizedDescription)")
+            }
+        }
+        
+        var commandBuffer: MTLCommandBuffer?
+        
+        for level in levels {
+            for pass in level {
+                await pass.pass.run(using: &commandBuffer, commandQueue: instance.mainCommandQueue)
+            }
+        }
+        
+        if let commandBuffer {
+            await commandBuffer.commitAndAwaitUntilCompleted()
+        }
+        
+        if captureManager.isCapturing {
+            captureManager.stopCapture()
+        }
     }
 }

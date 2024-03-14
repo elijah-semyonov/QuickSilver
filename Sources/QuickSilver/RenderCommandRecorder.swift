@@ -11,13 +11,17 @@ private struct RenderPassBufferBindingValue {
     let offset: Int
 }
 
-public struct RenderPassCommandEncoder: ~Copyable {
+public struct RenderCommandEncoder: ~Copyable {
     let encoder: MTLRenderCommandEncoder
     
     private var boundBuffers: [RenderPassResourceBindingSlot: RenderPassBufferBindingValue] = [:]
     private var boundTextures: [RenderPassResourceBindingSlot: Texture] = [:]
     
-    public func setRenderPipelineState(_ state: RenderPipelineState) {
+    deinit {
+        encoder.endEncoding()
+    }
+    
+public func setRenderPipelineState(_ state: RenderPipelineState) {
         encoder.setRenderPipelineState(state.wrapped)
     }
     
@@ -35,23 +39,45 @@ public struct RenderPassCommandEncoder: ~Copyable {
         }
     }
     
-    public mutating func setVertexBuffer(_ buffer: Buffer, offset: Int, index: Int) {
-        setBuffer(buffer, stage: .vertex, offset: offset, index: index)
+    public mutating func setVertexBytes<T>(_ value: T, index: Int) {
+        withUnsafePointer(to: value) { ptr in
+            boundBuffers[RenderPassResourceBindingSlot(stage: .vertex, index: index)] = nil
+            encoder.setVertexBytes(ptr, length: MemoryLayout<T>.size, index: index)
+        }        
     }
     
-    public mutating func setVertexTexture(_ texture: Texture, index: Int) {
-        setTexture(texture, stage: .vertex, index: index)
+    public mutating func setFragmentBytes<T>(_ value: T, index: Int) {
+        withUnsafePointer(to: value) { ptr in
+            boundBuffers[RenderPassResourceBindingSlot(stage: .fragment, index: index)] = nil
+            encoder.setFragmentBytes(ptr, length: MemoryLayout<T>.size, index: index)
+        }
+    }
+    
+    public mutating func setVertexBuffer(_ buffer: Buffer, offset: Int, index: Int) {
+        setBuffer(buffer, stage: .vertex, offset: offset, index: index)
     }
     
     public mutating func setFragmentBuffer(_ buffer: Buffer, offset: Int, index: Int) {
         setBuffer(buffer, stage: .fragment, offset: offset, index: index)
     }
     
+    public mutating func setVertexTexture(_ texture: Texture, index: Int) {
+        setTexture(texture, stage: .vertex, index: index)
+    }
+    
     public mutating func setFragmentTexture(_ texture: Texture, index: Int) {
         setTexture(texture, stage: .vertex, index: index)
     }
     
-    mutating private func setBuffer(_ buffer: Buffer, stage: RenderStage, offset: Int, index: Int) {
+    static func to(commandBuffer: MTLCommandBuffer, renderPassDescriptor: MTLRenderPassDescriptor) -> Self {
+        guard let encoder = commandBuffer.makeRenderCommandEncoder(descriptor: renderPassDescriptor) else {
+            fatalError("makeRenderCommandEncoder(descriptor:) returned nil")
+        }
+        
+        return Self(encoder: encoder)
+    }
+    
+    private mutating func setBuffer(_ buffer: Buffer, stage: RenderStage, offset: Int, index: Int) {
         guard let materialized = buffer.materialized else {
             fatalError("RenderPass bound a buffer that wasn't materialized")
         }
@@ -72,7 +98,7 @@ public struct RenderPassCommandEncoder: ~Copyable {
         }
     }
     
-    mutating private func bind(_ value: RenderPassBufferBindingValue, to slot: RenderPassResourceBindingSlot, onlyOffset: Bool = false) {
+    private mutating func bind(_ value: RenderPassBufferBindingValue, to slot: RenderPassResourceBindingSlot, onlyOffset: Bool = false) {
         boundBuffers[slot] = value
         
         switch slot.stage {
@@ -91,7 +117,7 @@ public struct RenderPassCommandEncoder: ~Copyable {
         }
     }
     
-    mutating private func setTexture(_ texture: Texture, stage: RenderStage, index: Int) {
+    private mutating func setTexture(_ texture: Texture, stage: RenderStage, index: Int) {
         let slot = RenderPassResourceBindingSlot(stage: stage, index: index)
         
         if let oldTexture = boundTextures[slot], oldTexture == texture {

@@ -19,3 +19,30 @@ extension MTLPrimitiveType {
         }
     }
 }
+
+extension MTLPixelFormat {
+    var bitsPerPixel: Int {
+        switch self {
+        case .bgra8Unorm, .rgba8Unorm, .bgra8Unorm_srgb, .rgba8Unorm_srgb:
+            return 32
+        default:
+            fatalError("TODO")
+        }
+    }
+    
+    var bytesPerPixel: Int {
+        bitsPerPixel / 8
+    }
+}
+
+extension MTLCommandBuffer {
+    func commitAndAwaitUntilCompleted() async {
+        await withUnsafeContinuation { continuation in
+            addCompletedHandler { _ in
+                continuation.resume()
+            }
+            
+            commit()
+        }
+    }
+}

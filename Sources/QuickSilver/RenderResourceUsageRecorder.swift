@@ -1,6 +1,6 @@
 import Foundation
 
-public struct RenderPassResourceUsageRecorder {
+public struct RenderResourceUsageRecorder {
     let pass: RenderPass        
     
     public func readTexture(_ texture: Texture, stage: RenderStage) {

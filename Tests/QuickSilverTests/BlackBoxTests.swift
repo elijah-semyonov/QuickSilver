@@ -31,7 +31,7 @@ final class BlackBoxTests: XCTestCase {
             )
         )
         
-        instance.executeFrame { frame in
+        await instance.executeFrame(capture: true) { frame in
             let texture0 = frame.makeTexture(width: 100, height: 100, pixelFormat: .bgra8Unorm_srgb)
             let texture1 = frame.makeTexture(width: 100, height: 100, pixelFormat: .bgra8Unorm_srgb)
             let texture2 = frame.makeTexture(width: 100, height: 100, pixelFormat: .bgra8Unorm_srgb)
@@ -41,7 +41,7 @@ final class BlackBoxTests: XCTestCase {
                     0: ColorAttachment(
                         texture: texture0,
                         storeAction: .store,
-                        loadAction: .clear(red: 1.0, green: 1.0, blue: 1.0, alpha: 1.0))
+                        loadAction: .clear(red: 1.0, green: 0.0, blue: 0.0, alpha: 1.0))
                 ],
                 depthAttachment: nil,
                 stencilAttachment: nil
@@ -49,6 +49,8 @@ final class BlackBoxTests: XCTestCase {
                 // empty
             } encodeCommands: { encoder in
                 encoder.setRenderPipelineState(renderPipelineState)
+                
+                encoder.setVertexBytes(50 as Float, index: 0)
 
                 encoder.drawPrimitives(vertexCount: 6)
             }
@@ -84,10 +86,12 @@ final class BlackBoxTests: XCTestCase {
             }
             
             frame.addCPUPass { usageRecorder in
+                usageRecorder.readTexture(texture0)
                 usageRecorder.readTexture(texture1)
                 usageRecorder.readTexture(texture2)
             } invoke: { resources in
-                // empty
+                let image = resources.image(from: texture0)
+                print(image)
             }
         }
     }

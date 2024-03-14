@@ -1,9 +1,9 @@
 import Foundation
 
 public struct StencilValue {
-    let value: Int32
+    let value: UInt32
     
-    public init(value: Int32) {
+    public init(value: UInt32) {
         self.value = value
     }
     

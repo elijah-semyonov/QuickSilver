@@ -1,4 +1,5 @@
 import Foundation
+import Metal
 
 enum PassResourceKind {
     case read
@@ -9,6 +10,8 @@ protocol Pass where Self: AnyObject {
     func updateResourceUsage()    
     
     func iterateResources(ofKind kind: PassResourceKind, stopAfter: (Resource) -> Bool)
+    
+    func run(using commandBuffer: inout MTLCommandBuffer?, commandQueue: MTLCommandQueue) async
 }
 
 extension Pass {

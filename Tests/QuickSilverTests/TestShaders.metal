@@ -5,9 +5,21 @@ struct output {
     float4 position [[position]];
 };
 
+constant float2 vertices[] = {
+    float2(-1.0, -1.0),
+    float2(-1.0,  1.0),
+    float2( 1.0,  1.0),
+    float2( 1.0, -1.0)
+};
+
+constant uint indices[] = {
+    0, 2, 1,
+    0, 3, 2
+};
+
 vertex output test_vs(uint vertex_id [[vertex_id]]) {
     return {
-        float4(0.0)
+        .position = float4(vertices[indices[vertex_id]], 0.0, 1.0)
     };
 }
 

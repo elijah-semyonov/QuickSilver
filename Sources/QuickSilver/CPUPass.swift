@@ -1,4 +1,5 @@
 import Foundation
+import Metal
 
 final class CPUPass: Pass {
     let index: Int
@@ -7,14 +8,14 @@ final class CPUPass: Pass {
     private(set) var readResources: Set<Resource> = []
     private(set) var writtenResources: Set<Resource> = []
     
-    private let invoke: (CPUPassResources) -> Void
+    private let invoke: (borrowing CPUResources) -> Void
     
-    init(index: Int, name: String?, recordUsage: (borrowing CPUPassResourceUsageRecorder) -> Void, invoke: @escaping (CPUPassResources) -> Void) {
+    init(index: Int, name: String?, recordUsage: (borrowing CPUResourceUsageRecorder) -> Void, invoke: @escaping (borrowing CPUResources) -> Void) {
         self.index = index
         self.invoke = invoke
         self.name = name
         
-        recordUsage(CPUPassResourceUsageRecorder(pass: self))
+        recordUsage(CPUResourceUsageRecorder(pass: self))
     }
     
     func iterateResources(ofKind kind: PassResourceKind, stopAfter: (Resource) -> Bool) {
@@ -58,6 +59,15 @@ final class CPUPass: Pass {
     
     func writeResource(_ resource: Resource) {
         writtenResources.insert(resource)
+    }
+    
+    func run(using commandBuffer: inout MTLCommandBuffer?, commandQueue: MTLCommandQueue) async {
+        if let nonNilCommandBuffer = commandBuffer {
+            commandBuffer = nil
+            await nonNilCommandBuffer.commitAndAwaitUntilCompleted()            
+        }
+        
+        invoke(CPUResources())
     }
 }
 
