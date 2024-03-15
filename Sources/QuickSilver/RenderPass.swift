@@ -2,7 +2,7 @@ import Foundation
 import Metal
 
 final class RenderPass: Pass {
-    let index: Int
+    let id: PassId
     let renderTarget: RenderTarget
     let name: String?        
     
@@ -12,13 +12,13 @@ final class RenderPass: Pass {
     private let encodeCommands: (inout RenderCommandEncoder) -> Void
 
     init(
-        index: Int,
+        id: PassId,
         renderTarget: RenderTarget,
         name: String?,
         recordUsage: (borrowing RenderResourceUsageRecorder) -> Void,
         encodeCommands: @escaping (inout RenderCommandEncoder) -> Void
     ) {
-        self.index = index
+        self.id = id
         self.renderTarget = renderTarget
         self.name = name
         self.encodeCommands = encodeCommands
@@ -101,7 +101,7 @@ final class RenderPass: Pass {
         }
     }
     
-    func run(using commandBuffer: inout MTLCommandBuffer?, commandQueue: MTLCommandQueue) async {
+    func execute(in context: PassExecutionContext) async {
         let renderPassDescriptor = MTLRenderPassDescriptor()
                 
         if let attachment = renderTarget.depthAttachment {
@@ -116,20 +116,12 @@ final class RenderPass: Pass {
             configure(renderPassDescriptor.colorAttachments[index], with: attachment)
         }
         
-        let nonNilCommandBuffer: MTLCommandBuffer
+        let commandBuffer = context.commandBuffer(for: self)
         
-        if let commandBuffer {
-            nonNilCommandBuffer = commandBuffer
-        } else {
-            guard let newCommandBuffer = commandQueue.makeCommandBuffer() else {
-                fatalError("makeCommandBuffer() returned nil")
-            }
-            
-            commandBuffer = newCommandBuffer
-            nonNilCommandBuffer = newCommandBuffer
-        }
-        
-        var encoder = RenderCommandEncoder.to(commandBuffer: nonNilCommandBuffer, renderPassDescriptor: renderPassDescriptor)
+        var encoder = RenderCommandEncoder.to(
+            commandBuffer: commandBuffer,
+            renderPassDescriptor: renderPassDescriptor
+        )
         encodeCommands(&encoder)
     }
     
@@ -204,15 +196,5 @@ final class RenderPass: Pass {
         case .multisampleResolve(let multisampleResolve):
             fatalError("\(multisampleResolve)")
         }
-    }
-}
-
-extension RenderPass: Hashable {
-    static func == (lhs: RenderPass, rhs: RenderPass) -> Bool {
-        lhs === rhs
-    }
-    
-    func hash(into hasher: inout Hasher) {
-        hasher.combine(ObjectIdentifier(self))
     }
 }

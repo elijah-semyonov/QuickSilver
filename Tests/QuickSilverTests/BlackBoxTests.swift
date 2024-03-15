@@ -50,7 +50,7 @@ final class BlackBoxTests: XCTestCase {
             } encodeCommands: { encoder in
                 encoder.setRenderPipelineState(renderPipelineState)
                 
-                encoder.setVertexBytes(50 as Float, index: 0)
+                encoder.setFragmentBytes(50 as Float, index: 0)
 
                 encoder.drawPrimitives(vertexCount: 6)
             }

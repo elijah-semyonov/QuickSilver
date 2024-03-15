@@ -2,18 +2,19 @@ import Foundation
 import Metal
 
 final class CPUPass: Pass {
-    let index: Int
-    let name: String?    
+    let id: PassId
+    let name: String?
     
     private(set) var readResources: Set<Resource> = []
     private(set) var writtenResources: Set<Resource> = []
     
     private let invoke: (borrowing CPUResources) -> Void
     
-    init(index: Int, name: String?, recordUsage: (borrowing CPUResourceUsageRecorder) -> Void, invoke: @escaping (borrowing CPUResources) -> Void) {
-        self.index = index
+    init(id: PassId, name: String?, recordUsage: (borrowing CPUResourceUsageRecorder) -> Void, invoke: @escaping (borrowing CPUResources) -> Void) {
+        self.id = id
         self.invoke = invoke
         self.name = name
+
         
         recordUsage(CPUResourceUsageRecorder(pass: self))
     }
@@ -61,22 +62,9 @@ final class CPUPass: Pass {
         writtenResources.insert(resource)
     }
     
-    func run(using commandBuffer: inout MTLCommandBuffer?, commandQueue: MTLCommandQueue) async {
-        if let nonNilCommandBuffer = commandBuffer {
-            commandBuffer = nil
-            await nonNilCommandBuffer.commitAndAwaitUntilCompleted()            
-        }
+    func execute(in context: PassExecutionContext) async {
+        await context.awaitBarrier(for: self)
         
         invoke(CPUResources())
-    }
-}
-
-extension CPUPass: Hashable {
-    public static func == (lhs: CPUPass, rhs: CPUPass) -> Bool {
-        lhs === rhs
-    }
-    
-    public func hash(into hasher: inout Hasher) {
-        hasher.combine(ObjectIdentifier(self))
     }
 }

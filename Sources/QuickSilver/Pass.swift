@@ -6,12 +6,14 @@ enum PassResourceKind {
     case written
 }
 
-protocol Pass where Self: AnyObject {    
-    func updateResourceUsage()    
+protocol Pass {
+    var id: PassId { get }
+    
+    func updateResourceUsage()
     
     func iterateResources(ofKind kind: PassResourceKind, stopAfter: (Resource) -> Bool)
     
-    func run(using commandBuffer: inout MTLCommandBuffer?, commandQueue: MTLCommandQueue) async
+    func execute(in context: PassExecutionContext) async
 }
 
 extension Pass {
@@ -36,23 +38,5 @@ extension Pass {
         }
         
         return satisfy
-    }
-}
-
-struct PassHashableWrapper {
-    let pass: any Pass
-    
-    static func wrapping(_ pass: any Pass) -> Self {
-        Self(pass: pass)
-    }
-}
-
-extension PassHashableWrapper: Hashable {
-    static func == (lhs: PassHashableWrapper, rhs: PassHashableWrapper) -> Bool {
-        lhs.pass === rhs.pass
-    }
-    
-    func hash(into hasher: inout Hasher) {
-        hasher.combine(ObjectIdentifier(pass))
     }
 }

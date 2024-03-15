@@ -3,8 +3,19 @@ import Metal
 
 public final class Frame {
     private let instance: Instance
-    private var passes: [Pass] = []
+    private var passes: [PassId: Pass] = [:]
     private let framesContext: FramesContext
+    private var nextPassId: PassId {
+        PassId(passes.count)
+    }
+    
+    private subscript(_ id: PassId) -> Pass {
+        guard let pass = passes[id] else {
+            fatalError("No pass with id \(id.value)")
+        }
+        
+        return pass
+    }
     
     init(instance: Instance, framesContext: FramesContext?) {
         self.instance = instance
@@ -18,15 +29,16 @@ public final class Frame {
         recordUsage: (borrowing RenderResourceUsageRecorder) -> Void,
         encodeCommands: @escaping (inout RenderCommandEncoder) -> Void
     ) {
-        passes.append(
+        let id = nextPassId
+        
+        passes[id] =
             RenderPass(
-                index: passes.count,
+                id: id,
                 renderTarget: renderTarget,
                 name: name,
                 recordUsage: recordUsage,
                 encodeCommands: encodeCommands
             )
-        )
     }
     
     public func addCPUPass(
@@ -34,14 +46,15 @@ public final class Frame {
         recordUsage: (borrowing CPUResourceUsageRecorder) -> Void,
         invoke: @escaping (borrowing CPUResources) -> Void
     ) {
-        passes.append(
+        let id = nextPassId
+        
+        passes[id] =
             CPUPass(
-                index: passes.count,
+                id: id,
                 name: name,
                 recordUsage: recordUsage,
                 invoke: invoke
             )
-        )
     }
     
     public func makeTexture(width: Int, height: Int, pixelFormat: MTLPixelFormat) -> Texture {        
@@ -53,51 +66,54 @@ public final class Frame {
     }
     
     func execute(capture: Bool) async {
-        for pass in passes {
+        for pass in passes.values {
             pass.updateResourceUsage()
         }
         
-        var passes = Set(passes.map { PassHashableWrapper.wrapping($0) })
-        var levels: [Set<PassHashableWrapper>] = []
-        var resolvedResources: Set<Resource> = []
+        var unresolvedPassIds = Set(passes.map { $0.key })
+        var resolvedLevels: [Set<PassId>] = []
+        // Resources and PassId of the last pass that wrote to it
+        var resolvedResources: [Resource: PassId] = [:]
         
         while true {
-            var currentLevel: Set<PassHashableWrapper> = []
-            var levelResolvedResources: Set<Resource> = []
+            var level: Set<PassId> = []
+            var levelResolvedResources: [Resource: PassId] = [:]
             
-            for wrapper in passes {
-                let resolved = wrapper.pass.allResourcesSatisfy(kind: .read) { resource in
-                    resolvedResources.contains(resource)
+            for passId in unresolvedPassIds {
+                let pass = self[passId]
+                
+                let resolved = pass.allResourcesSatisfy(kind: .read) { resource in
+                    resolvedResources[resource] != nil
                 }
                 
                 if resolved {
-                    currentLevel.insert(wrapper)
+                    level.insert(passId)
                     
-                    wrapper.pass.forEachResource(ofKind: .written) { resource in
-                        levelResolvedResources.insert(resource)
+                    pass.forEachResource(ofKind: .written) { resource in
+                        levelResolvedResources[resource] = passId
                     }
                 }
             }
             
-            for resource in levelResolvedResources {
-                resolvedResources.insert(resource)
+            for (resource, passId) in levelResolvedResources {
+                resolvedResources[resource] = passId
             }
             
-            for pass in currentLevel {
-                passes.remove(pass)
-                currentLevel.insert(pass)
+            for passId in level {
+                unresolvedPassIds.remove(passId)
+                level.insert(passId)
             }
             
-            if currentLevel.isEmpty {
+            if level.isEmpty {
                 break
             } else {
-                levels.append(currentLevel)
+                resolvedLevels.append(level)
             }
         }
         
-        precondition(passes.count == 0)
+        precondition(unresolvedPassIds.count == 0)
         
-        for resource in resolvedResources {
+        for resource in resolvedResources.keys {
             switch resource {
             case .buffer(let buffer):
                 fatalError("\(buffer)")
@@ -137,16 +153,12 @@ public final class Frame {
             }
         }
         
-        var commandBuffer: MTLCommandBuffer?
+        let passExecutionContext = PassExecutionContext(passesExecutionCommandBuffers: [:])
         
-        for level in levels {
-            for pass in level {
-                await pass.pass.run(using: &commandBuffer, commandQueue: instance.mainCommandQueue)
+        for level in resolvedLevels {
+            for passId in level {
+                await self[passId].execute(in: passExecutionContext)
             }
-        }
-        
-        if let commandBuffer {
-            await commandBuffer.commitAndAwaitUntilCompleted()
         }
         
         if captureManager.isCapturing {
