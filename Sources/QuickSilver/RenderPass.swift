@@ -81,6 +81,14 @@ final class RenderPass: Pass {
         }
     }
     
+    func resourceWrite(for resource: Resource) -> ResourceWrite {
+        guard let stage = writtenResources[resource] else {
+            fatalError("Resource is not written in this pass")
+        }
+        
+        return .renderPass(id: id, stage: stage)
+    }
+    
     func readResource(resource: Resource, at stage: RenderStage) {
         if let previousStage = readResources[resource] {
             if stage < previousStage {

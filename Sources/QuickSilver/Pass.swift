@@ -14,6 +14,8 @@ protocol Pass {
     func iterateResources(ofKind kind: PassResourceKind, stopAfter: (Resource) -> Bool)
     
     func execute(in context: PassExecutionContext) async
+    
+    func resourceWrite(for resource: Resource) -> ResourceWrite
 }
 
 extension Pass {

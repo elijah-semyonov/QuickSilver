@@ -54,13 +54,21 @@ final class CPUPass: Pass {
         }
     }
     
+    func resourceWrite(for resource: Resource) -> ResourceWrite {
+        guard writtenResources.contains(resource) else {
+            fatalError("Resource is not written in this pass")
+        }
+        
+        return .cpuPass(id: id)
+    }
+    
     func readResource(_ resource: Resource) {
         readResources.insert(resource)
     }
     
     func writeResource(_ resource: Resource) {
         writtenResources.insert(resource)
-    }
+    }        
     
     func execute(in context: PassExecutionContext) async {
         await context.awaitBarrier(for: self)

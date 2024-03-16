@@ -73,7 +73,7 @@ public final class Frame {
         var unresolvedPassIds = Set(passes.map { $0.key })
         var resolvedLevels: [Set<PassId>] = []
         // Resources and PassId of the last pass that wrote to it
-        var resolvedResources: [Resource: PassId] = [:]
+        var resolvedResourcesWrites: [Resource: ResourceWrite] = [:]
         
         while true {
             var level: Set<PassId> = []
@@ -83,7 +83,7 @@ public final class Frame {
                 let pass = self[passId]
                 
                 let resolved = pass.allResourcesSatisfy(kind: .read) { resource in
-                    resolvedResources[resource] != nil
+                    resolvedResourcesWrites[resource] != nil
                 }
                 
                 if resolved {
@@ -96,7 +96,7 @@ public final class Frame {
             }
             
             for (resource, passId) in levelResolvedResources {
-                resolvedResources[resource] = passId
+                resolvedResourcesWrites[resource] = self[passId].resourceWrite(for: resource)
             }
             
             for passId in level {
@@ -113,7 +113,7 @@ public final class Frame {
         
         precondition(unresolvedPassIds.count == 0)
         
-        for resource in resolvedResources.keys {
+        for resource in resolvedResourcesWrites.keys {
             switch resource {
             case .buffer(let buffer):
                 fatalError("\(buffer)")
