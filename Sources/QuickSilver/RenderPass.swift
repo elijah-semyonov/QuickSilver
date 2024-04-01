@@ -2,25 +2,57 @@ import Foundation
 import Metal
 
 final class RenderPass: GPUPass {
+    private struct WaitedFenceIdentifier: Hashable {
+        let passId: PassId
+        let stage: RenderStage
+    }
+    
     let id: PassId
+    
     let renderTarget: RenderTarget
+    
     let name: String?
     
     var asProcessorTaggedPass: ProcessorTaggedPass {
         .gpuPass(self)
     }
     
-    private(set) var waitedFences: [(RenderStage, MTLFence)] = []
-    private(set) var signalledFences: [RenderStage: MTLFence] = [:]
+    var signalledValue: UInt64 {
+        if let _signalledValue {
+            return _signalledValue
+        } else {
+            let value = nextSignalValue()
+            _signalledValue = value
+            return value
+        }
+    }
     
-    private(set) var readResources: [Resource: RenderStage] = [:]
-    private(set) var writtenResources: [Resource: RenderStage] = [:]
+    private var _signalledValue: UInt64?
+    
+    private var waitedValue: UInt64?
+    
+    private var readResources: [Resource: RenderStage] = [:]
+    
+    private var writtenResources: [Resource: RenderStage] = [:]
+        
+    private var waitedFences: [WaitedFenceIdentifier: MTLFence] = [:]
+    
+    private var updatedFences: [RenderStage: MTLFence] = [:]
             
     private let encodeCommands: (inout RenderCommandEncoder) -> Void
+    
+    private let makeFence: () -> MTLFence
+    
+    private let nextSignalValue: () -> UInt64
+    
+    private let sharedEvent: MTLSharedEvent
 
     init(
         id: PassId,
         renderTarget: RenderTarget,
+        sharedEvent: MTLSharedEvent,
+        makeFence: @escaping () -> MTLFence,
+        nextSignalValue: @escaping () -> UInt64,
         name: String?,
         recordUsage: (borrowing RenderResourceUsageRecorder) -> Void,
         encodeCommands: @escaping (inout RenderCommandEncoder) -> Void
@@ -29,6 +61,9 @@ final class RenderPass: GPUPass {
         self.renderTarget = renderTarget
         self.name = name
         self.encodeCommands = encodeCommands
+        self.makeFence = makeFence
+        self.nextSignalValue = nextSignalValue
+        self.sharedEvent = sharedEvent
         
         recordUsage(RenderResourceUsageRecorder(pass: self))
         
@@ -41,12 +76,32 @@ final class RenderPass: GPUPass {
         }
     }
     
+    func updatedFence(for resource: Resource) -> MTLFence {
+        guard let stage = writtenResources[resource] else {
+            preconditionFailure()
+        }
+        
+        return updatedFences[stage, default: makeFence()]
+    }
+    
     func prepareSyncPoint(for resource: Resource, writtenByPass pass: any Pass) {
+        guard let readStage = readResources[resource] else {
+            preconditionFailure()
+        }
+        
         switch pass.asProcessorTaggedPass {
         case .gpuPass(let pass):
-            break
+            let passId = pass.id
+            
+            let identifier = WaitedFenceIdentifier(passId: passId, stage: readStage)
+            
+            if waitedFences[identifier] == nil {
+                waitedFences[identifier] = pass.updatedFence(for: resource)
+            }
         case .cpuPass(let pass):
-            break
+            waitedValue = waitedValue.map { previousValue in
+                max(previousValue, pass.signalledValue)
+            } ?? pass.signalledValue
         }
     }
     
@@ -122,7 +177,7 @@ final class RenderPass: GPUPass {
         }
     }
     
-    func execute(in context: PassExecutionContext) async {
+    func execute(in commandBuffer: MTLCommandBuffer) {
         let renderPassDescriptor = MTLRenderPassDescriptor()
                 
         if let attachment = renderTarget.depthAttachment {
@@ -137,15 +192,33 @@ final class RenderPass: GPUPass {
             configure(renderPassDescriptor.colorAttachments[index], with: attachment)
         }
         
-        let commandBuffer = context.commandBuffer(for: self)
+        if let waitedValue {
+            commandBuffer.encodeWaitForEvent(sharedEvent, value: waitedValue)
+        }
         
+        encode(to: commandBuffer, renderPassDescriptor: renderPassDescriptor)
+        
+        if let _signalledValue {
+            commandBuffer.encodeSignalEvent(sharedEvent, value: _signalledValue)
+        }
+    }
+    
+    private func encode(to commandBuffer: MTLCommandBuffer, renderPassDescriptor: MTLRenderPassDescriptor) {
         var encoder = RenderCommandEncoder.to(
             commandBuffer: commandBuffer,
             renderPassDescriptor: renderPassDescriptor
         )
         
+        for (identifier, fence) in waitedFences {
+            encoder.encoder.waitForFence(fence, before: MTLRenderStages(identifier.stage))
+        }
+        
+        for (stage, fence) in updatedFences {
+            encoder.encoder.updateFence(fence, after: MTLRenderStages(stage))
+        }
+        
         encodeCommands(&encoder)
-    }        
+    }
     
     private func configure(_ descriptor: MTLRenderPassStencilAttachmentDescriptor, with attachment: StencilAttachment) {
         descriptor.texture = attachment.texture.mtlTexture

@@ -15,11 +15,13 @@ enum ProcessorTaggedPass {
 protocol Pass {
     var id: PassId { get }
     
+    var signalledValue: UInt64 { get }
+    
     var asProcessorTaggedPass: ProcessorTaggedPass { get }
     
     func updateResourceUsage()
     
-    func execute(in context: PassExecutionContext) async
+    func execute(in commandBuffer: MTLCommandBuffer)
     
     func resourceWrite(for resource: Resource) -> ResourceWrite
     
@@ -33,5 +35,5 @@ protocol Pass {
 }
 
 protocol GPUPass: Pass {
-    
+    func updatedFence(for resource: Resource) -> MTLFence
 }

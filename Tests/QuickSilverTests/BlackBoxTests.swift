@@ -31,7 +31,7 @@ final class BlackBoxTests: XCTestCase {
             )
         )
         
-        await instance.executeFrame(capture: true) { frame in
+        let commandBuffer = instance.executeFrame { frame in
             let texture0 = frame.makeTexture(width: 100, height: 100, pixelFormat: .bgra8Unorm_srgb)
             let texture1 = frame.makeTexture(width: 100, height: 100, pixelFormat: .bgra8Unorm_srgb)
             let texture2 = frame.makeTexture(width: 100, height: 100, pixelFormat: .bgra8Unorm_srgb)
@@ -94,5 +94,9 @@ final class BlackBoxTests: XCTestCase {
                 print(image)
             }
         }
+        
+        commandBuffer.waitUntilScheduled()
+        commandBuffer.waitUntilCompleted()
+        print("haha")
     }
 }

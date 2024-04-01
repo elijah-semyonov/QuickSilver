@@ -3,22 +3,45 @@ import Metal
 
 final class CPUPass: Pass {
     let id: PassId
+    
     let name: String?
     
     var asProcessorTaggedPass: ProcessorTaggedPass {
         .cpuPass(self)
     }
     
-    private(set) var readResources: Set<Resource> = []
-    private(set) var writtenResources: Set<Resource> = []
+    var signalledValue: UInt64 {
+        if let _signalledValue {
+            return _signalledValue
+        } else {
+            let value = framesContext.nextSignalValue()
+            _signalledValue = value
+            return value
+        }
+    }
+    
+    private var _signalledValue: UInt64?
+    
+    private var waitedValue: UInt64?
+    
+    private var readResources: Set<Resource> = []
+    
+    private var writtenResources: Set<Resource> = []
     
     private let invoke: (borrowing CPUResources) -> Void
     
-    init(id: PassId, name: String?, recordUsage: (borrowing CPUResourceUsageRecorder) -> Void, invoke: @escaping (borrowing CPUResources) -> Void) {
+    private let framesContext: FramesContext
+    
+    init(
+        id: PassId,
+        name: String?,
+        framesContext: FramesContext,
+        recordUsage: (borrowing CPUResourceUsageRecorder) -> Void,
+        invoke: @escaping (borrowing CPUResources) -> Void) {
         self.id = id
         self.invoke = invoke
         self.name = name
-
+        self.framesContext = framesContext
         
         recordUsage(CPUResourceUsageRecorder(pass: self))
     }
@@ -34,9 +57,11 @@ final class CPUPass: Pass {
     func allReadResourceSatisfy(_ predicate: (Resource) -> Bool) -> Bool {
         readResources.allSatisfy(predicate)
     }
-    
-    func prepareSyncPoint(for resource: Resource, writtenByPass pass: any Pass) {
         
+    func prepareSyncPoint(for resource: Resource, writtenByPass pass: any Pass) {
+        waitedValue = waitedValue.map { previousValue in
+            max(previousValue, pass.signalledValue)
+        } ?? pass.signalledValue
     }
     
     func updateResourceUsage() {
@@ -75,9 +100,23 @@ final class CPUPass: Pass {
         writtenResources.insert(resource)
     }        
     
-    func execute(in context: PassExecutionContext) async {
-        await context.awaitBarrier(for: self)
-        
+    func execute(in commandBuffer: MTLCommandBuffer) {
+        if let waitedValue {
+            framesContext.invoke(atSignalValue: waitedValue) { [self] in
+                execute()
+                
+                return _signalledValue
+            }
+        } else {
+            execute()
+            
+            if let _signalledValue {
+                framesContext.updateSignalValue(to: _signalledValue)
+            }
+        }
+    }
+    
+    private func execute() {
         invoke(CPUResources())
     }
 }

@@ -31,10 +31,24 @@ public final class Frame {
     ) {
         let id = nextPassId
         
+        let device = instance.device
+        let context = framesContext
+        
         passes[id] =
             RenderPass(
                 id: id,
                 renderTarget: renderTarget,
+                sharedEvent: framesContext.sharedEvent,
+                makeFence: {
+                    guard let fence = device.makeFence() else {
+                        fatalError()
+                    }
+                    
+                    return fence
+                },
+                nextSignalValue: {
+                    context.nextSignalValue()
+                },
                 name: name,
                 recordUsage: recordUsage,
                 encodeCommands: encodeCommands
@@ -52,6 +66,7 @@ public final class Frame {
             CPUPass(
                 id: id,
                 name: name,
+                framesContext: framesContext,
                 recordUsage: recordUsage,
                 invoke: invoke
             )
@@ -65,7 +80,7 @@ public final class Frame {
         fatalError()
     }
     
-    func execute() async {
+    func execute() -> MTLCommandBuffer {
         for pass in passes.values {
             pass.updateResourceUsage()
         }
@@ -169,13 +184,19 @@ public final class Frame {
             }
         }
         
-        let passExecutionContext = PassExecutionContext(passesExecutionCommandBuffers: [:])
+        guard let commandBuffer = instance.mainCommandQueue.makeCommandBuffer() else {
+            fatalError()
+        }
         
         for level in resolvedLevels {
             for passId in level {
-                await self[passId].execute(in: passExecutionContext)
+                self[passId].execute(in: commandBuffer)
             }
         }
+        
+        commandBuffer.commit()
+        
+        return commandBuffer
     }
     
     private func prepareSyncPoints(for passId: PassId, reads: [Resource: PassId]) {
@@ -184,9 +205,11 @@ public final class Frame {
         }
         
         for (resource, dependencyPassId) in reads {
-            guard let dependencyPass = passes[passId] else {
+            guard let dependencyPass = passes[dependencyPassId] else {
                 preconditionFailure()
             }
+            
+            pass.prepareSyncPoint(for: resource, writtenByPass: dependencyPass)
         }
     }
 }

@@ -46,3 +46,14 @@ extension MTLCommandBuffer {
         }
     }
 }
+
+extension MTLRenderStages {
+    init(_ stage: RenderStage) {
+        switch stage {
+        case .vertex:
+            self = .vertex
+        case .fragment:
+            self = .fragment
+        }
+    }
+}
