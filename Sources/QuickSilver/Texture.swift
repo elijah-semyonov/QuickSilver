@@ -3,6 +3,7 @@ import Metal
 
 public struct Texture: Hashable {
     let impl: TextureImpl
+    
     var mtlTexture: MTLTexture {
         switch impl {
         case .deferred(let deferredTexture):

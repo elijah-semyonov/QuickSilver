@@ -20,12 +20,12 @@ public class Instance {
         self.mainCommandQueue = mainCommandQueue
     }
     
-    public func executeFrame(capture: Bool = false, _ closure: (Frame) -> Void) async {
+    public func executeFrame(_ closure: (Frame) -> Void) async {
         let frame = Frame(instance: self, framesContext: nil)
         
         closure(frame)
         
-        await frame.execute(capture: capture)
+        await frame.execute()
     }
     
     public func renderPipelineState(describedBy descriptor: RenderPipelineDescriptor) async -> RenderPipelineState {

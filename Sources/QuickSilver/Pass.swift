@@ -11,7 +11,7 @@ protocol Pass {
     
     func updateResourceUsage()
     
-    func iterateResources(ofKind kind: PassResourceKind, stopAfter: (Resource) -> Bool)
+    func iterateResources(of kind: PassResourceKind, stopAfter: (Resource) -> Bool)
     
     func execute(in context: PassExecutionContext) async
     
@@ -20,17 +20,17 @@ protocol Pass {
 
 extension Pass {
     func forEachResource(ofKind kind: PassResourceKind, _ closure: (Resource) -> Void) {
-        iterateResources(ofKind: kind) { resource in
+        iterateResources(of: kind) { resource in
             closure(resource)
             
             return false
         }
     }
     
-    func allResourcesSatisfy(kind: PassResourceKind, _ predicate: (Resource) -> Bool) -> Bool {
+    func eachResource(of kind: PassResourceKind, satisfies predicate: (Resource) -> Bool) -> Bool {
         var satisfy = true
         
-        iterateResources(ofKind: kind) { resource in
+        iterateResources(of: kind) { resource in
             if predicate(resource) {
                 return false
             } else {

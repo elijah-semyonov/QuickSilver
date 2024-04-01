@@ -19,7 +19,7 @@ final class CPUPass: Pass {
         recordUsage(CPUResourceUsageRecorder(pass: self))
     }
     
-    func iterateResources(ofKind kind: PassResourceKind, stopAfter: (Resource) -> Bool) {
+    func iterateResources(of kind: PassResourceKind, stopAfter: (Resource) -> Bool) {
         let keyPath: KeyPath<CPUPass, Set<Resource>> = switch kind {
         case .read:
             \.readResources

@@ -65,24 +65,32 @@ public final class Frame {
         fatalError()
     }
     
-    func execute(capture: Bool) async {
+    func execute() async {
         for pass in passes.values {
             pass.updateResourceUsage()
         }
         
+        // ids of passes that haven't been resolved yet
         var unresolvedPassIds = Set(passes.map { $0.key })
+        
+        // array of sets of ids, each subsequent set of passes depend on previous
         var resolvedLevels: [Set<PassId>] = []
+        
         // Resources and PassId of the last pass that wrote to it
         var resolvedResourcesWrites: [Resource: ResourceWrite] = [:]
         
+        // Drain passes until all of them are resolved, or we are in the point where none of the remaining passes can be resolved
         while true {
+            // All pass ids on current dependency level
             var level: Set<PassId> = []
+            
+            // Resources that are written on currently resolved level
             var levelResolvedResources: [Resource: PassId] = [:]
             
             for passId in unresolvedPassIds {
                 let pass = self[passId]
                 
-                let resolved = pass.allResourcesSatisfy(kind: .read) { resource in
+                let resolved = pass.eachResource(of: .read) { resource in
                     resolvedResourcesWrites[resource] != nil
                 }
                 
@@ -140,29 +148,12 @@ public final class Frame {
             }
         }
         
-        let captureManager = MTLCaptureManager.shared()
-                
-        if (capture) {
-            let captureDescriptor = MTLCaptureDescriptor()
-            captureDescriptor.captureObject = instance.mainCommandQueue
-            
-            do {
-                try captureManager.startCapture(with: captureDescriptor)
-            } catch {
-                print("Failed to capture. \(error.localizedDescription)")
-            }
-        }
-        
         let passExecutionContext = PassExecutionContext(passesExecutionCommandBuffers: [:])
         
         for level in resolvedLevels {
             for passId in level {
                 await self[passId].execute(in: passExecutionContext)
             }
-        }
-        
-        if captureManager.isCapturing {
-            captureManager.stopCapture()
         }
     }
 }

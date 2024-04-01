@@ -34,7 +34,7 @@ final class RenderPass: Pass {
         }
     }
     
-    func iterateResources(ofKind kind: PassResourceKind, stopAfter: (Resource) -> Bool) {
+    func iterateResources(of kind: PassResourceKind, stopAfter: (Resource) -> Bool) {
         let keyPath: KeyPath<RenderPass, [Resource: RenderStage]> = switch kind {
         case .read:
             \.readResources
