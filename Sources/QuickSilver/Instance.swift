@@ -14,7 +14,7 @@ public class Instance {
         self.library = library
         
         guard let mainCommandQueue = device.makeCommandQueue() else {
-            fatalError("makeCommandQueue() returned nil")
+            fatalError()
         }
         
         self.mainCommandQueue = mainCommandQueue

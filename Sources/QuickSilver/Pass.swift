@@ -1,44 +1,37 @@
 import Foundation
 import Metal
 
-enum PassResourceKind {
+enum PassResourceAccess {
     case read
-    case written
+    case write
 }
+
+enum ProcessorTaggedPass {
+    case gpuPass(any GPUPass)
+    case cpuPass(CPUPass)
+}
+
 
 protocol Pass {
     var id: PassId { get }
     
-    func updateResourceUsage()
+    var asProcessorTaggedPass: ProcessorTaggedPass { get }
     
-    func iterateResources(of kind: PassResourceKind, stopAfter: (Resource) -> Bool)
+    func updateResourceUsage()
     
     func execute(in context: PassExecutionContext) async
     
     func resourceWrite(for resource: Resource) -> ResourceWrite
+    
+    func allReadResourceSatisfy(_ predicate: (Resource) -> Bool) -> Bool
+    
+    func forEachReadResource(_ closure: (Resource) -> Void)
+    
+    func forEachWrittenResource(_ closure: (Resource) -> Void)
+    
+    func prepareSyncPoint(for resource: Resource, writtenByPass pass: Pass)
 }
 
-extension Pass {
-    func forEachResource(ofKind kind: PassResourceKind, _ closure: (Resource) -> Void) {
-        iterateResources(of: kind) { resource in
-            closure(resource)
-            
-            return false
-        }
-    }
+protocol GPUPass: Pass {
     
-    func eachResource(of kind: PassResourceKind, satisfies predicate: (Resource) -> Bool) -> Bool {
-        var satisfy = true
-        
-        iterateResources(of: kind) { resource in
-            if predicate(resource) {
-                return false
-            } else {
-                satisfy = false
-                return true
-            }
-        }
-        
-        return satisfy
-    }
 }

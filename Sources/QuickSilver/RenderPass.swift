@@ -1,10 +1,17 @@
 import Foundation
 import Metal
 
-final class RenderPass: Pass {
+final class RenderPass: GPUPass {
     let id: PassId
     let renderTarget: RenderTarget
-    let name: String?        
+    let name: String?
+    
+    var asProcessorTaggedPass: ProcessorTaggedPass {
+        .gpuPass(self)
+    }
+    
+    private(set) var waitedFences: [(RenderStage, MTLFence)] = []
+    private(set) var signalledFences: [RenderStage: MTLFence] = [:]
     
     private(set) var readResources: [Resource: RenderStage] = [:]
     private(set) var writtenResources: [Resource: RenderStage] = [:]
@@ -34,19 +41,25 @@ final class RenderPass: Pass {
         }
     }
     
-    func iterateResources(of kind: PassResourceKind, stopAfter: (Resource) -> Bool) {
-        let keyPath: KeyPath<RenderPass, [Resource: RenderStage]> = switch kind {
-        case .read:
-            \.readResources
-        case .written:
-            \.writtenResources
+    func prepareSyncPoint(for resource: Resource, writtenByPass pass: any Pass) {
+        switch pass.asProcessorTaggedPass {
+        case .gpuPass(let pass):
+            break
+        case .cpuPass(let pass):
+            break
         }
-        
-        for resource in self[keyPath: keyPath].keys {
-            if stopAfter(resource) {
-                break
-            }
-        }
+    }
+    
+    func allReadResourceSatisfy(_ predicate: (Resource) -> Bool) -> Bool {
+        readResources.keys.allSatisfy(predicate)
+    }
+    
+    func forEachReadResource(_ closure: (Resource) -> Void) {
+        readResources.keys.forEach(closure)
+    }
+    
+    func forEachWrittenResource(_ closure: (Resource) -> Void) {
+        writtenResources.keys.forEach(closure)
     }
     
     func updateResourceUsage() {
@@ -130,8 +143,9 @@ final class RenderPass: Pass {
             commandBuffer: commandBuffer,
             renderPassDescriptor: renderPassDescriptor
         )
+        
         encodeCommands(&encoder)
-    }
+    }        
     
     private func configure(_ descriptor: MTLRenderPassStencilAttachmentDescriptor, with attachment: StencilAttachment) {
         descriptor.texture = attachment.texture.mtlTexture

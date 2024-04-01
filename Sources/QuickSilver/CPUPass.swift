@@ -5,6 +5,10 @@ final class CPUPass: Pass {
     let id: PassId
     let name: String?
     
+    var asProcessorTaggedPass: ProcessorTaggedPass {
+        .cpuPass(self)
+    }
+    
     private(set) var readResources: Set<Resource> = []
     private(set) var writtenResources: Set<Resource> = []
     
@@ -19,19 +23,20 @@ final class CPUPass: Pass {
         recordUsage(CPUResourceUsageRecorder(pass: self))
     }
     
-    func iterateResources(of kind: PassResourceKind, stopAfter: (Resource) -> Bool) {
-        let keyPath: KeyPath<CPUPass, Set<Resource>> = switch kind {
-        case .read:
-            \.readResources
-        case .written:
-            \.writtenResources
-        }
+    func forEachReadResource(_ closure: (Resource) -> Void) {
+        readResources.forEach(closure)
+    }
+    
+    func forEachWrittenResource(_ closure: (Resource) -> Void) {
+        writtenResources.forEach(closure)
+    }
+    
+    func allReadResourceSatisfy(_ predicate: (Resource) -> Bool) -> Bool {
+        readResources.allSatisfy(predicate)
+    }
+    
+    func prepareSyncPoint(for resource: Resource, writtenByPass pass: any Pass) {
         
-        for resource in self[keyPath: keyPath] {
-            if stopAfter(resource) {
-                break
-            }
-        }
     }
     
     func updateResourceUsage() {
