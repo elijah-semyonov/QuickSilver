@@ -59,7 +59,7 @@ final class CPUPass: Pass {
             fatalError("Resource is not written in this pass")
         }
         
-        return .cpuPass(id: id)
+        return .cpuPass(self)
     }
     
     func readResource(_ resource: Resource) {

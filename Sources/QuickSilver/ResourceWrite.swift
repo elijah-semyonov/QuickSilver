@@ -1,15 +1,15 @@
 import Foundation
 
 enum ResourceWrite {
-    case cpuPass(id: PassId)
-    case renderPass(id: PassId, stage: RenderStage)
+    case cpuPass(CPUPass)
+    case renderPass(RenderPass, stage: RenderStage)
     
     var passId: PassId {
         switch self {
-        case .cpuPass(let id):
-            id
-        case .renderPass(let id, _):
-            id
+        case .cpuPass(let pass):
+            pass.id
+        case .renderPass(let pass, _):
+            pass.id
         }
     }
 }

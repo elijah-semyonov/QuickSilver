@@ -86,7 +86,7 @@ final class RenderPass: Pass {
             fatalError("Resource is not written in this pass")
         }
         
-        return .renderPass(id: id, stage: stage)
+        return .renderPass(self, stage: stage)
     }
     
     func readResource(resource: Resource, at stage: RenderStage) {

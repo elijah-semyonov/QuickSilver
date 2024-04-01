@@ -87,6 +87,8 @@ public final class Frame {
             // Resources that are written on currently resolved level
             var levelResolvedResources: [Resource: PassId] = [:]
             
+            // Iterate all remaining passes and in case all of the resources they have read previously are already written, insert the pass into
+            // current level and add their written resource to the resolved resources dictionary
             for passId in unresolvedPassIds {
                 let pass = self[passId]
                 
