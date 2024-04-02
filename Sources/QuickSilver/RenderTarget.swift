@@ -43,6 +43,12 @@ public struct RenderTarget {
         self.stencilAttachment = stencilAttachment
     }
     
+    public init(colorAttachments: [ColorAttachment], depthAttachment: DepthAttachment?, stencilAttachment: StencilAttachment?) {
+        self.colorAttachments = Dictionary(uniqueKeysWithValues: colorAttachments.enumerated().map { ($0, $1) })        
+        self.depthAttachment = depthAttachment
+        self.stencilAttachment = stencilAttachment
+    }
+    
     func updateTextureUsage() {
         for (_, attachment) in colorAttachments {
             attachment.updateTextureUsage()

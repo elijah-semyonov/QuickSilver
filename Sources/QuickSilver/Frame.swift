@@ -80,7 +80,7 @@ public final class Frame {
         fatalError()
     }
     
-    func execute() -> MTLCommandBuffer {
+    func execute() {
         for pass in passes.values {
             pass.updateResourceUsage()
         }
@@ -194,9 +194,7 @@ public final class Frame {
             }
         }
         
-        commandBuffer.commit()
-        
-        return commandBuffer
+        commandBuffer.commit()                
     }
     
     private func prepareSyncPoints(for passId: PassId, reads: [Resource: PassId]) {

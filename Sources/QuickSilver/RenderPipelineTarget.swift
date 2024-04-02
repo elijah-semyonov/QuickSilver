@@ -11,4 +11,10 @@ public struct RenderPipelineTarget: Hashable {
         self.depthAttachment = depthAttachment
         self.stencilAttachment = stencilAttachment
     }
+    
+    public init(colorAttachments: [RenderPipelineColorAttachment], depthAttachment: MTLPixelFormat? = nil, stencilAttachment: MTLPixelFormat? = nil) {
+        self.colorAttachments = Dictionary(uniqueKeysWithValues: colorAttachments.enumerated().map { ($0, $1) })
+        self.depthAttachment = depthAttachment
+        self.stencilAttachment = stencilAttachment
+    }
 }
