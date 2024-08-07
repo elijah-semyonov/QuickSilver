@@ -1,0 +1,15 @@
+{
+  "originHash" : "8d097415edc528226fdd3e4e2a1fb53634d0dd36e67148af9df3a70a3aea4478",
+  "pins" : [
+    {
+      "identity" : "swiftoffsetallocator",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/elijah-semyonov/SwiftOffsetAllocator",
+      "state" : {
+        "revision" : "0805307de8db0af7e298b5294677b227b2c134a9",
+        "version" : "1.0.0"
+      }
+    }
+  ],
+  "version" : 3
+}
