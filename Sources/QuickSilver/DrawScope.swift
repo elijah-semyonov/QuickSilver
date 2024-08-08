@@ -6,5 +6,5 @@
 //
 
 public protocol DrawScope {
-    
+    func renderPass(_ body: (RenderPassScope) -> Void)
 }
