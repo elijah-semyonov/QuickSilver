@@ -2,11 +2,18 @@ import XCTest
 @testable import QuickSilver
 
 final class QuickSilverTests: XCTestCase {
-    func testExample() throws {
-        // XCTest Documentation
-        // https://developer.apple.com/documentation/xctest
-
-        // Defining Test Cases and Test Methods
-        // https://developer.apple.com/documentation/xctest/defining_test_cases_and_test_methods
+    @MainActor
+    func testSimple() throws {
+        let backend = MetalBackend.initialize(libraryBundle: .module)
+        
+        backend.executeFrame { frame in
+            let texture = frame.texture()
+            
+            frame.renderPass(colorAttachments: [
+                .texture(texture, clearedWith: .opaqueBlack)
+            ]) { pass in
+                
+            }
+        }
     }
 }

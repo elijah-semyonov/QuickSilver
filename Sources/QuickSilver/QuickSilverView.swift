@@ -12,7 +12,7 @@ import SwiftUI
 import AppKit
 
 class QuickSilverNSView: NSView {
-    private let context: MetalContext = .shared
+    let backend: MetalBackend
     
     var pixelFormat: PixelFormat {
         didSet {
@@ -20,16 +20,18 @@ class QuickSilverNSView: NSView {
         }
     }
     
-    var draw: (DrawScope) -> Void
+    var draw: (PresentableFrameScope) -> Void
     
     private var displayLink: CADisplayLink?
     
     private let metalLayer = CAMetalLayer()
     
     init(
+        backend: MetalBackend,
         pixelFormat: PixelFormat,
-        draw: @escaping (DrawScope) -> Void
+        draw: @escaping (PresentableFrameScope) -> Void
     ) {
+        self.backend = backend
         self.pixelFormat = pixelFormat
         self.draw = draw
         
@@ -38,7 +40,7 @@ class QuickSilverNSView: NSView {
         wantsLayer = true
         layer = metalLayer
         
-        metalLayer.device = context.device
+        metalLayer.device = backend.device
         metalLayer.allowsNextDrawableTimeout = false
         metalLayer.framebufferOnly = true
         
@@ -89,12 +91,13 @@ class QuickSilverNSView: NSView {
 }
 
 struct QuickSilverNSViewRepresentable: NSViewRepresentable {
+    let backend: MetalBackend
     let pixelFormat: PixelFormat
     
-    let draw: (DrawScope) -> Void
+    let draw: (PresentableFrameScope) -> Void
     
     func makeNSView(context: Context) -> QuickSilverNSView {
-        QuickSilverNSView(pixelFormat: pixelFormat, draw: draw)
+        QuickSilverNSView(backend: backend, pixelFormat: pixelFormat, draw: draw)
     }
     
     func updateNSView(_ nsView: QuickSilverNSView, context: Context) {
@@ -106,13 +109,15 @@ struct QuickSilverNSViewRepresentable: NSViewRepresentable {
 #endif
 
 public struct QuickSilverView: View {
-    private let draw: (DrawScope) -> Void
+    @Environment(MetalBackend.self) var backend
+    
+    private let draw: (PresentableFrameScope) -> Void
     
     private let pixelFormat: PixelFormat
     
     public init(
         pixelFormat: PixelFormat = .bgra8Unorm_srgb,
-        draw: @escaping (DrawScope) -> Void
+        draw: @escaping (PresentableFrameScope) -> Void
     ) {
         self.pixelFormat = pixelFormat
         self.draw = draw
@@ -120,7 +125,7 @@ public struct QuickSilverView: View {
     
     public var body: some View {
         #if os(macOS)
-        QuickSilverNSViewRepresentable(pixelFormat: pixelFormat, draw: draw)
+        QuickSilverNSViewRepresentable(backend: backend, pixelFormat: pixelFormat, draw: draw)
         #else
         Text("Not implemented")
         #endif

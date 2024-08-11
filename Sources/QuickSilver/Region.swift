@@ -6,6 +6,8 @@
 //
 
 public struct Region {
+    static let undefined: Int = -1
+    
     public let x: Int
     public let y: Int
     public let z: Int
@@ -22,7 +24,6 @@ public struct Region {
         height: Int = 1,
         depth: Int = 1
     ) {
-        precondition(width >= 1)
         precondition(height >= 1)
         precondition(depth >= 1)
         
@@ -34,15 +35,27 @@ public struct Region {
         self.depth = depth
     }
     
-    static func region1D(x: Int = 0, width: Int) -> Self {
+    static func region1D(x: Int = 0, width: Int = Self.undefined) -> Self {
         .init(x: x, width: width)
     }
     
-    static func region2D(x: Int = 0, y: Int = 0, width: Int, height: Int) -> Self {
+    static func region2D(
+        x: Int = 0,
+        y: Int = 0,
+        width: Int = Self.undefined,
+        height: Int = Self.undefined
+    ) -> Self {
         .init(x: x, y: y, width: width, height: height)
     }
     
-    static func region3D(x: Int = 0, y: Int = 0, z: Int = 0, width: Int, height: Int, depth: Int) -> Self {
+    static func region3D(
+        x: Int = 0,
+        y: Int = 0,
+        z: Int = 0,
+        width: Int = Self.undefined,
+        height: Int = Self.undefined,
+        depth: Int = Self.undefined
+    ) -> Self {
         .init(x: x, y: y, z: z, width: width, height: height, depth: depth)
     }
 }

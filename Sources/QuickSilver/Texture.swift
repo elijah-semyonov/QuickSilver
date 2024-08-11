@@ -5,6 +5,6 @@
 //  Created by Elijah Semyonov on 08/08/2024.
 //
 
-public struct Texture {
-    
+public struct Texture: Hashable {
+    let identifier: Int
 }
