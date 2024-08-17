@@ -15,6 +15,7 @@ public protocol FrameScope {
 }
 
 public protocol PresentableFrameScope: FrameScope {
+    var presentableTexture: Texture { get }
 }
 
 public extension FrameScope {

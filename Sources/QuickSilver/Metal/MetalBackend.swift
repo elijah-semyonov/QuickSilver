@@ -30,8 +30,7 @@ public final class MetalBackend: Observable {
         } catch {
             fatalError("Failed to create default Metal library. \(error)")
         }
-    
-        
+            
         guard let commandQueue = device.makeCommandQueue() else {
             fatalError("Failed to create Metal command queue.")
         }

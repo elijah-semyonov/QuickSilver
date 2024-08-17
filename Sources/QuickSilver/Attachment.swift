@@ -10,7 +10,7 @@ public struct Attachment<ClearValue> {
     public let loadAction: LoadAction<ClearValue>?
     public let storeAction: StoreAction?
     
-    init(
+    public init(
         texture: Texture,
         loadAction: LoadAction<ClearValue>?,
         storeAction: StoreAction?
@@ -20,7 +20,7 @@ public struct Attachment<ClearValue> {
         self.loadAction = loadAction
     }
     
-    static func texture(_ texture: Texture, clearedWith clearValue: ClearValue) -> Self {
+    public static func texture(_ texture: Texture, clearedWith clearValue: ClearValue) -> Self {
         .init(texture: texture, loadAction: .clear(clearValue), storeAction: nil)
     }
 }
