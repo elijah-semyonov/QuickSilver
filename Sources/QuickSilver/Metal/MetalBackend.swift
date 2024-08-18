@@ -50,12 +50,4 @@ public final class MetalBackend: Observable {
         self.shared = shared
         return shared
     }
-    
-    public func executeFrame(_ frame: (FrameScope) -> Void) {
-        
-    }
-    
-    public func executePresentableFrame(layer: CAMetalLayer, _ frame: (PresentableFrameScope) -> Void) {
-        
-    }
 }

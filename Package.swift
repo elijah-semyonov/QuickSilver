@@ -29,6 +29,13 @@ let package = Package(
         .testTarget(
             name: "QuickSilverTests",
             dependencies: ["QuickSilver"]
-        )        
+        ),
+        .executableTarget(
+            name: "QuickSilverSamples",
+            dependencies: ["QuickSilver"],
+            resources: [
+                .process("Samples.metal")
+            ]
+        )
     ]
 )

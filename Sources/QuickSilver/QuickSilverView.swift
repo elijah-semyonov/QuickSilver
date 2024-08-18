@@ -20,22 +20,26 @@ class QuickSilverNSView: NSView {
         }
     }
     
-    var draw: (PresentableFrameScope) -> Void
+    var draw: (FrameScope) -> Void
     
     private var displayLink: CADisplayLink?
     
     private let metalLayer = CAMetalLayer()
     
+    private var context: MetalContext!
+    
     init(
         backend: MetalBackend,
         pixelFormat: PixelFormat,
-        draw: @escaping (PresentableFrameScope) -> Void
+        draw: @escaping (FrameScope) -> Void
     ) {
         self.backend = backend
         self.pixelFormat = pixelFormat
         self.draw = draw
         
         super.init(frame: .zero)
+        
+        context = MetalContext(backend: backend, metalLayer: metalLayer)
         
         wantsLayer = true
         layer = metalLayer
@@ -55,7 +59,7 @@ class QuickSilverNSView: NSView {
     override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
         
-        if let window {
+        if window != nil {
             displayLink?.invalidate()
             let displayLink = displayLink(target: self, selector: #selector(handleDisplayLink))
             displayLink.add(to: .main, forMode: .common)
@@ -84,9 +88,7 @@ class QuickSilverNSView: NSView {
     }
     
     @objc private func handleDisplayLink() {
-        guard let displayLink else {
-            fatalError()
-        }
+        context.execute(draw)
     }
 }
 
@@ -94,7 +96,7 @@ struct QuickSilverNSViewRepresentable: NSViewRepresentable {
     let backend: MetalBackend
     let pixelFormat: PixelFormat
     
-    let draw: (PresentableFrameScope) -> Void
+    let draw: (FrameScope) -> Void
     
     func makeNSView(context: Context) -> QuickSilverNSView {
         QuickSilverNSView(backend: backend, pixelFormat: pixelFormat, draw: draw)
@@ -111,13 +113,13 @@ struct QuickSilverNSViewRepresentable: NSViewRepresentable {
 public struct QuickSilverView: View {
     @Environment(MetalBackend.self) var backend
     
-    private let draw: (PresentableFrameScope) -> Void
+    private let draw: (FrameScope) -> Void
     
     private let pixelFormat: PixelFormat
     
     public init(
         pixelFormat: PixelFormat = .bgra8Unorm_srgb,
-        draw: @escaping (PresentableFrameScope) -> Void
+        draw: @escaping (FrameScope) -> Void
     ) {
         self.pixelFormat = pixelFormat
         self.draw = draw

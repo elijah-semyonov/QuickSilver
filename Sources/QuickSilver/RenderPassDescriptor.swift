@@ -11,12 +11,12 @@ public struct RenderPassDescriptor {
         case store
     }
     
-    public let colorAttachments: [Int: ColorAttachment]
+    public let colorAttachments: [ColorAttachment]
     public let depthAttachment: DepthAttachment?
     public let stencilAttachment: StencilAttachment?
     
     public init(
-        colorAttachments: [Int : ColorAttachment],
+        colorAttachments: [ColorAttachment],
         depthAttachment: DepthAttachment?,
         stencilAttachment: StencilAttachment?
     ) {
@@ -26,4 +26,6 @@ public struct RenderPassDescriptor {
     }
 }
 
-
+struct InferredRenderPassDescriptor {
+    let colorAttachments: [ColorAttachment]
+}
