@@ -1,5 +1,5 @@
 //
-//  MetalAdapters.swift
+//  MetalConversions.swift
 //  QuickSilver
 //
 //  Created by Elijah Semyonov on 11/08/2024.

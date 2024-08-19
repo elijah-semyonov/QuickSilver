@@ -5,12 +5,7 @@
 //  Created by Elijah Semyonov on 08/08/2024.
 //
 
-public struct RenderPassDescriptor {
-    public enum DepthStencilStoreAction {
-        case dontCare
-        case store
-    }
-    
+public struct RenderPassDescriptor {    
     public let colorAttachments: [ColorAttachment]
     public let depthAttachment: DepthAttachment?
     public let stencilAttachment: StencilAttachment?
@@ -24,8 +19,4 @@ public struct RenderPassDescriptor {
         self.depthAttachment = depthAttachment
         self.stencilAttachment = stencilAttachment
     }
-}
-
-struct InferredRenderPassDescriptor {
-    let colorAttachments: [ColorAttachment]
 }

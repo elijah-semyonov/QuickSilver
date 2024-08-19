@@ -8,11 +8,13 @@
 import QuartzCore
 
 public class FrameScope {
-    let resourceRegistry = ResourceRegistry()
-    let inferenceMachine = InferenceMachine()
-    var actualPresentableTexture: Texture?
+    let resourceRegistry: ResourceRegistry
+    let actualPresentableTexture: Texture?
     
     init(metalLayer: CAMetalLayer?) {
+        let resourceRegistry = ResourceRegistry()
+        self.resourceRegistry = resourceRegistry
+        
         actualPresentableTexture = metalLayer.map {
             resourceRegistry.deposit($0)
         }
@@ -20,7 +22,7 @@ public class FrameScope {
     
     public var presentableTexture: Texture {
         guard let texture = actualPresentableTexture else {
-            fatalError("There is no presentable texture in this frame.")
+            fatalError("There is no presentable texture associated with this scope")
         }
         
         return texture

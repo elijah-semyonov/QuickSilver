@@ -24,13 +24,3 @@ public struct RenderPipelineDescriptor: Hashable {
         self.colorAttachments = colorAttachments
     }
 }
-
-class InferredRenderPipelineDescriptor {
-    let pipeline: RenderPipelineDescriptor
-    let pass: RenderPassDescriptor
-    
-    init(pipeline: RenderPipelineDescriptor, pass: RenderPassDescriptor) {
-        self.pipeline = pipeline
-        self.pass = pass
-    }
-}
