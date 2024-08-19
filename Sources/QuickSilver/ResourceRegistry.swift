@@ -9,18 +9,8 @@ import QuartzCore
 
 class ResourceRegistry {
     var nextTextureId: Int = 0
-    var textures: [Texture: InferredTexture] = [:]
     
-    func deposit(_ metalLayer: CAMetalLayer) -> Texture {
-        let texture = nextTexture()
-        
-        textures[texture] = MetalDrawableTexture(
-            texture: texture,
-            metalLayer: metalLayer
-        )
-                
-        return texture
-    }
+    var textures: [Texture: InferredTexture] = [:]
     
     func pixelFormat(of texture: Texture) -> PixelFormat {
         guard let pixelFormat = textures[texture]?.pixelFormat else {
@@ -28,6 +18,14 @@ class ResourceRegistry {
         }
         
         return pixelFormat
+    }
+    
+    func deposit<T>(_ inferredTexture: T) -> Texture where T: InferredTexture {
+        let texture = nextTexture()
+        
+        textures[texture] = inferredTexture
+        
+        return texture
     }
     
     func nextTexture() -> Texture {

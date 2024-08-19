@@ -5,16 +5,20 @@
 //  Created by Elijah Semyonov on 19/08/2024.
 //
 
-
 class DeferredTexture: InferredTexture {
-    let texture: Texture
-    let pixelFormat: PixelFormat    
+    let name: String
+    
+    let pixelFormat: PixelFormat
+    
+    let dataArrangement: TaggedTextureDataArrangement
     
     init(
-        texture: Texture,
+        name: String,
+        dataArrangement: TaggedTextureDataArrangement,
         pixelFormat: PixelFormat
     ) {
-        self.texture = texture
+        self.name = name
+        self.dataArrangement = dataArrangement
         self.pixelFormat = pixelFormat
     }
 }

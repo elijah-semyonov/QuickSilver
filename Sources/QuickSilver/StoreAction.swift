@@ -7,6 +7,8 @@
 
 public enum StoreAction {    
     case store
+    
     case multisampleResolve(target: Texture)
+    
     case storeAndMultisampleResolve(target: Texture)
 }

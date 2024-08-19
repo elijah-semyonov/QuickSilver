@@ -8,8 +8,9 @@
 import QuartzCore
 
 class MetalDrawableTexture: InferredTexture {
-    let texture: Texture
     let metalLayer: CAMetalLayer
+    
+    let dataArrangement: TaggedTextureDataArrangement
     
     var pixelFormat: PixelFormat {
         switch metalLayer.pixelFormat {
@@ -23,10 +24,16 @@ class MetalDrawableTexture: InferredTexture {
     }
     
     init(
-        texture: Texture,
         metalLayer: CAMetalLayer
     ) {
-        self.texture = texture
         self.metalLayer = metalLayer
+        
+        self.dataArrangement = .twoDimensional(
+            .init(
+                width: Int(metalLayer.drawableSize.width),
+                height: Int(metalLayer.drawableSize.height),
+                count: 1
+            )
+        )
     }
 }

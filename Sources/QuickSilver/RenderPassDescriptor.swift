@@ -5,9 +5,11 @@
 //  Created by Elijah Semyonov on 08/08/2024.
 //
 
-public struct RenderPassDescriptor {    
+public struct RenderPassDescriptor {
     public let colorAttachments: [ColorAttachment]
+    
     public let depthAttachment: DepthAttachment?
+    
     public let stencilAttachment: StencilAttachment?
     
     public init(

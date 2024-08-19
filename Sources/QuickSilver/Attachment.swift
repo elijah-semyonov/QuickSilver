@@ -7,7 +7,9 @@
 
 public struct Attachment<ClearValue> {
     public let texture: Texture
+    
     public let loadAction: LoadAction<ClearValue>?
+    
     public let storeAction: StoreAction?
     
     public init(
@@ -35,8 +37,11 @@ public struct ClearColor {
     }
     
     public let red: Double
+    
     public let green: Double
+    
     public let blue: Double
+    
     public let alpha: Double
     
     public init(red: Double, green: Double, blue: Double, alpha: Double) {

@@ -9,6 +9,7 @@ import QuartzCore
 
 public class FrameScope {
     let resourceRegistry: ResourceRegistry
+    
     let actualPresentableTexture: Texture?
     
     init(metalLayer: CAMetalLayer?) {
@@ -16,7 +17,9 @@ public class FrameScope {
         self.resourceRegistry = resourceRegistry
         
         actualPresentableTexture = metalLayer.map {
-            resourceRegistry.deposit($0)
+            resourceRegistry.deposit(
+                MetalDrawableTexture(metalLayer: $0)
+            )
         }
     }
     
@@ -34,9 +37,16 @@ public class FrameScope {
     
     public func texture(
         named name: String? = nil,
-        pixelFormat: PixelFormat? = nil
+        pixelFormat: PixelFormat,
+        dataArrangment: TextureDataArrangement1D
     ) -> Texture {
-        return Texture(identifier: 0)
+        resourceRegistry.deposit(
+            DeferredTexture(
+                name: "Deferred texture \(UUID().uuidString)",
+                dataArrangement: .oneDimensional(dataArrangment),
+                pixelFormat: pixelFormat
+            )
+        )
     }
     
     public func renderPass(

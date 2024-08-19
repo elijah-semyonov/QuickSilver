@@ -9,6 +9,7 @@ import QuartzCore
 
 class MetalContext {
     let backend: MetalBackend
+    
     let metalLayer: CAMetalLayer?
     
     init(backend: MetalBackend, metalLayer: CAMetalLayer?) {

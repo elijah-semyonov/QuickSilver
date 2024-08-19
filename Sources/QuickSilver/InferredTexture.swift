@@ -6,7 +6,7 @@
 //
 
 protocol InferredTexture {
-    var texture: Texture { get }
-    
     var pixelFormat: PixelFormat { get }
+    
+    var dataArrangement: TaggedTextureDataArrangement { get }
 }

@@ -15,7 +15,9 @@ public struct RenderPipelineColorAttachment: Hashable {
 
 public struct RenderPipelineDescriptor: Hashable {
     public let vertexName: String
+    
     public let fragmentName: String?
+    
     public let colorAttachments: [Int: RenderPipelineColorAttachment]
     
     public init(vertexName: String, fragmentName: String?, colorAttachments: [Int: RenderPipelineColorAttachment] = [:]) {
