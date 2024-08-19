@@ -23,6 +23,10 @@ class MetalDrawableTexture: InferredTexture {
         }
     }
     
+    var asTagged: TaggedInferredTexture {
+        .metalDrawable(self)
+    }
+    
     init(
         metalLayer: CAMetalLayer
     ) {

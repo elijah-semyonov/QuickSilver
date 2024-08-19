@@ -6,11 +6,14 @@
 //
 
 import QuartzCore
+import Metal
 
 class MetalContext {
     let backend: MetalBackend
     
     let metalLayer: CAMetalLayer?
+    
+    var drawable: CAMetalDrawable?
     
     init(backend: MetalBackend, metalLayer: CAMetalLayer?) {
         self.backend = backend
@@ -18,8 +21,106 @@ class MetalContext {
     }
     
     func execute(_ draw: (FrameScope) -> Void) {
-        let scope = FrameScope(metalLayer: metalLayer)
+        let frameScope = FrameScope(metalLayer: metalLayer)
         
-        draw(scope)
+        draw(frameScope)
+        
+        guard let commandBuffer = backend.commandQueue.makeCommandBuffer() else {
+            fatalError("Failed to create command buffer")
+        }
+        
+        for passScope in frameScope.passScopes {
+            let renderPassDescriptor = MTLRenderPassDescriptor()
+            
+            passScope
+                .descriptor
+                .colorAttachments
+                .enumerated()
+                .forEach { index, attachment in
+                    guard let configuredAttachment = renderPassDescriptor.colorAttachments[index] else {
+                        fatalError("Unexpected nil color attachment at index \(index)")
+                    }
+                    
+                    configuredAttachment.texture = materialize(frameScope: frameScope, texture: attachment.texture)
+                    switch attachment.loadAction {
+                    case .load:
+                        configuredAttachment.loadAction = .load
+                    case .clear(let clearColor):
+                        configuredAttachment.loadAction = .clear
+                        configuredAttachment.clearColor = MTLClearColor(red: clearColor.red, green: clearColor.green, blue: clearColor.blue, alpha: clearColor.alpha)
+                    case .none:
+                        configuredAttachment.loadAction = .dontCare
+                    }
+                    
+                    configuredAttachment.storeAction = .store
+                }
+            
+            passScope
+                .descriptor
+                .depthAttachment
+                .map { attachment in
+                    guard let configuredAttachment = renderPassDescriptor.depthAttachment else {
+                        fatalError("Unexpected nil depth attachment")
+                    }
+                    
+                    configuredAttachment.texture = materialize(frameScope: frameScope, texture: attachment.texture)
+                    switch attachment.loadAction {
+                    case .load:
+                        configuredAttachment.loadAction = .load
+                    case .clear(let clearDepth):
+                        configuredAttachment.loadAction = .clear
+                        configuredAttachment.clearDepth = clearDepth.value
+                    case .none:
+                        configuredAttachment.loadAction = .dontCare
+                    }
+                }
+            
+            passScope
+                .descriptor
+                .stencilAttachment
+                .map { attachment in
+                    guard let configuredAttachment = renderPassDescriptor.stencilAttachment else {
+                        fatalError("Unexpected nil depth attachment")
+                    }
+                    
+                    configuredAttachment.texture = materialize(frameScope: frameScope, texture: attachment.texture)
+                    switch attachment.loadAction {
+                    case .load:
+                        configuredAttachment.loadAction = .load
+                    case .clear(let clearStencil):
+                        configuredAttachment.loadAction = .clear
+                        configuredAttachment.clearStencil = clearStencil.value
+                    case .none:
+                        configuredAttachment.loadAction = .dontCare
+                    }
+                }
+                
+        }
+        
+        if let drawable {
+            commandBuffer.present(drawable)
+        }
+        
+        commandBuffer.commit()
+    }
+    
+    func materialize(frameScope: FrameScope, texture: Texture) -> MTLTexture {
+        guard let inferredTexture = frameScope.textures[texture] else {
+            fatalError("Unknown texture \(texture)")
+        }
+        
+        switch inferredTexture.asTagged {
+        case .deferred(let texture):
+            fatalError()
+        case .metalDrawable(let texture):
+            guard let drawable = texture.metalLayer.nextDrawable() else {
+                fatalError()
+            }
+            
+            self.drawable = drawable
+            let texture = drawable.texture
+            
+            return texture
+        }
     }
 }

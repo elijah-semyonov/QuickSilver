@@ -8,16 +8,17 @@
 import QuartzCore
 
 public class FrameScope {
-    let resourceRegistry: ResourceRegistry
+    var nextTextureId: Int = 0
     
-    let actualPresentableTexture: Texture?
+    var textures: [Texture: InferredTexture] = [:]
+    
+    var actualPresentableTexture: Texture?
+    
+    var passScopes: [RenderPassScope] = []
     
     init(metalLayer: CAMetalLayer?) {
-        let resourceRegistry = ResourceRegistry()
-        self.resourceRegistry = resourceRegistry
-        
         actualPresentableTexture = metalLayer.map {
-            resourceRegistry.deposit(
+            deposit(
                 MetalDrawableTexture(metalLayer: $0)
             )
         }
@@ -31,8 +32,12 @@ public class FrameScope {
         return texture
     }
     
-    public func renderPass(describedBy: RenderPassDescriptor, _ body: (RenderPassScope) -> Void) {
+    public func renderPass(describedBy descriptor: RenderPassDescriptor, _ body: (RenderPassScope) -> Void) {
+        let scope = RenderPassScope(descriptor: descriptor)
         
+        body(scope)
+        
+        passScopes.append(scope)
     }
     
     public func texture(
@@ -40,7 +45,7 @@ public class FrameScope {
         pixelFormat: PixelFormat,
         dataArrangment: TextureDataArrangement1D
     ) -> Texture {
-        resourceRegistry.deposit(
+        deposit(
             DeferredTexture(
                 name: "Deferred texture \(UUID().uuidString)",
                 dataArrangement: .oneDimensional(dataArrangment),
@@ -60,5 +65,29 @@ public class FrameScope {
             depthAttachment: depthAttachment,
             stencilAttachment: stencilAttachment
         ), body)
+    }
+    
+    func pixelFormat(of texture: Texture) -> PixelFormat {
+        guard let pixelFormat = textures[texture]?.pixelFormat else {
+            fatalError("Unknown texture \(texture)")
+        }
+        
+        return pixelFormat
+    }
+    
+    func deposit<T>(_ inferredTexture: T) -> Texture where T: InferredTexture {
+        let texture = nextTexture()
+        
+        textures[texture] = inferredTexture
+        
+        return texture
+    }
+    
+    func nextTexture() -> Texture {
+        defer {
+            nextTextureId += 1
+        }
+        
+        return Texture(identifier: nextTextureId)
     }
 }

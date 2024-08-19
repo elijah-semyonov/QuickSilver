@@ -12,6 +12,10 @@ class DeferredTexture: InferredTexture {
     
     let dataArrangement: TaggedTextureDataArrangement
     
+    var asTagged: TaggedInferredTexture {
+        .deferred(self)
+    }
+    
     init(
         name: String,
         dataArrangement: TaggedTextureDataArrangement,
