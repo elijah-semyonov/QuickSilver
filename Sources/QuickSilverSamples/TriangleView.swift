@@ -10,18 +10,24 @@ import QuickSilver
 
 
 class TriangleViewScene {
-    let renderPipelineDescriptor = RenderPipelineDescriptor(vertexName: "vfTriangle", fragmentName: "ffTriangle")
+    let renderPipelineDescriptor = RenderPassPipelineDescriptor(
+        vertexName: "vfTriangle",
+        fragmentName: "ffTriangle",
+        colorAttachments: [
+            .opaque
+        ]
+    )
     
-    func draw(in fScope: FrameScope) {
-        fScope.renderPass(describedBy: .init(
+    func draw(in frameScope: FrameScope) {
+        frameScope.renderPass(describedBy: .init(
             colorAttachments: [
-                .texture(fScope.presentableTexture, clearedWith: .init(red: 0.5, green: 0.5, blue: 0.5, alpha: 1.0))
+                .texture(frameScope.presentableTexture, clearedWith: .init(red: 0.05, green: 0.07, blue: 0.1, alpha: 1.0))
             ],
             depthAttachment: nil,
             stencilAttachment: nil
-        )) { rpScope in
-            rpScope.setPipelineState(describedBy: renderPipelineDescriptor)
-            rpScope.drawTriangles(vertexCount: 3)
+        )) { renderPassScope in
+            renderPassScope.setState(describedBy: renderPipelineDescriptor)
+            renderPassScope.draw(vertexCount: 3)
         }
     }
 }

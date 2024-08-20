@@ -33,7 +33,7 @@ public class FrameScope {
     }
     
     public func renderPass(describedBy descriptor: RenderPassDescriptor, _ body: (RenderPassScope) -> Void) {
-        let scope = RenderPassScope(descriptor: descriptor)
+        let scope = RenderPassScope(frameScope: self, descriptor: descriptor)
         
         body(scope)
         

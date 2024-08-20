@@ -17,3 +17,12 @@ extension MTLPixelFormat {
         }
     }
 }
+
+extension MTLPrimitiveType {
+    init(_ value: PrimitiveType) {
+        switch value {
+        case .triangle:
+            self = .triangle
+        }
+    }
+}

@@ -94,7 +94,48 @@ class MetalContext {
                         configuredAttachment.loadAction = .dontCare
                     }
                 }
-                
+            
+            guard let encoder = commandBuffer.makeRenderCommandEncoder(descriptor: renderPassDescriptor) else {
+                fatalError("Failed to create render command encoder")
+            }
+            
+            for command in passScope.commands {
+                switch command {
+                case .setDescribedPipelineState(let command):
+                    let state = backend.mtlRenderPipelineState(for: command.descriptor)
+                    encoder.setRenderPipelineState(state)
+                case .draw(let command):
+                    let primitiveType = MTLPrimitiveType(command.primitiveType)
+                    
+                    if command.instanceCount > 1 {
+                        if command.baseInstance != 0 {
+                            encoder.drawPrimitives(
+                                type: primitiveType,
+                                vertexStart: command.vertexStart,
+                                vertexCount: command.vertexCount,
+                                instanceCount: command.instanceCount,
+                                baseInstance: command.baseInstance
+                            )
+                        } else {
+                            encoder.drawPrimitives(
+                                type: primitiveType,
+                                vertexStart: command.vertexStart,
+                                vertexCount: command.vertexCount,
+                                instanceCount: command.instanceCount                                
+                            )
+                        }
+                    } else {
+                        encoder.drawPrimitives(
+                            type: primitiveType,
+                            vertexStart: command.vertexStart,
+                            vertexCount: command.vertexCount
+                        )
+                    }
+                    break
+                }
+            }
+            
+            encoder.endEncoding()
         }
         
         if let drawable {
