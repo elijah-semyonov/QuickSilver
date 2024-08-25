@@ -9,6 +9,20 @@
 
 using namespace metal;
 
+static float linearFloatFromSrgb(float value) {
+    if (value <= 0.04045) {
+        return value / 12.92;
+    } else {
+        return pow((value + 0.055) / 1.055, 2.4);
+    }
+}
+
+static float3 linearFloat3FromSrgb(float3 value) {
+    return float3(linearFloatFromSrgb(value.x),
+                  linearFloatFromSrgb(value.y),
+                  linearFloatFromSrgb(value.z));
+}
+
 struct TriangleVaryings {
     float4 position [[position]];
     float3 color;
@@ -20,15 +34,13 @@ constant float2 trianglePositions[] = {
     float2(0.8, -0.8)
 };
 
-constant float3 triangleColors[] = {
-    float3(1.0, 0.0, 0.0),
-    float3(0.0, 1.0, 0.0),
-    float3(0.0, 0.0, 1.0)
-};
-
-vertex TriangleVaryings vfTriangle(uint vId [[vertex_id]]) {
+vertex TriangleVaryings vfTriangle
+(
+ uint vId [[vertex_id]],
+ constant packed_float3 *colors [[buffer(0)]]
+) {
     auto position = trianglePositions[vId];
-    auto color = triangleColors[vId];
+    auto color = linearFloat3FromSrgb(colors[vId]);
     
     return {
         .position = float4(position, 0.5, 1.0),
@@ -36,6 +48,9 @@ vertex TriangleVaryings vfTriangle(uint vId [[vertex_id]]) {
     };
 }
 
-fragment half4 ffTriangle(TriangleVaryings in [[stage_in]]) {
+fragment half4 ffTriangle
+(
+ TriangleVaryings in [[stage_in]]
+) {
     return half4(half3(in.color), 1.0h);
 }

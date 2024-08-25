@@ -75,16 +75,19 @@ public class RenderPassScope {
         _ buffer: Buffer,
         bindings: [RenderPassStage: BufferBinding]
     ) {
-        commands.append(.setBuffer(.init(buffer: buffer, bindings: bindings)))
+        commands.append(.setBuffer(.init(
+            buffer: buffer,
+            bindings: bindings
+        )))
     }
     
     public func setBuffer(
         _ buffer: Buffer,
-        indices: [RenderPassStage: Int]
+        bindingIndices: [RenderPassStage: Int]
     ) {
         setBuffer(
             buffer,
-            bindings: indices.mapValues { index in
+            bindings: bindingIndices.mapValues { index in
                 .init(index: index, offset: 0)
             }
         )
