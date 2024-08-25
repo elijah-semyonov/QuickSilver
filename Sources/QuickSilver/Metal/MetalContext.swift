@@ -155,7 +155,7 @@ class MetalContext {
             fatalError()
         case .metalDrawable(let texture):
             guard let drawable = texture.metalLayer.nextDrawable() else {
-                fatalError()
+                fatalError("CAMetalLayer.nextDrawable() time-out is not supported")
             }
             
             self.drawable = drawable

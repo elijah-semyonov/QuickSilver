@@ -18,7 +18,10 @@ public final class MetalBackend: Observable {
     let commandQueue: MTLCommandQueue
     
     var renderPipelineCache: [RenderPipelineDescriptor: RenderPipelineState] = [:]
-    var mtlRenderPipelineStates: [MTLRenderPipelineState] = []
+    
+    var mtlRenderPipelineStates: [RenderPipelineState: MTLRenderPipelineState] = [:]
+    
+    var renderPipelineStateCounter: Int = 0
     
     init(libraryBundle: Bundle?) {
         guard let device = MTLCreateSystemDefaultDevice() else {
@@ -44,7 +47,11 @@ public final class MetalBackend: Observable {
     }
     
     func mtlRenderPipelineState(for state: RenderPipelineState) -> MTLRenderPipelineState {
-        return mtlRenderPipelineStates[state.identifier]
+        guard let mtlState = mtlRenderPipelineStates[state] else {
+            fatalError("No Metal render pipeline state for \(state).")
+        }
+        
+        return mtlState
     }
     
     func mtlRenderPipelineState(for descriptor: RenderPipelineDescriptor) -> MTLRenderPipelineState {
@@ -73,7 +80,7 @@ public final class MetalBackend: Observable {
         mtlDescriptor.vertexFunction = vertexFunction
         mtlDescriptor.fragmentFunction = fragmentFunction
         
-        descriptor.colorAttachments.enumerated().forEach { index, attachment in
+        for (index, attachment) in descriptor.colorAttachments.enumerated() {
             guard let mtlAttachment = mtlDescriptor.colorAttachments[index] else {
                 fatalError()
             }
@@ -90,20 +97,26 @@ public final class MetalBackend: Observable {
             mtlDescriptor.stencilAttachmentPixelFormat = MTLPixelFormat(attachment.pixelFormat)
         }
         
-        let mtlRenderPipelineState: MTLRenderPipelineState
+        let mtlState: MTLRenderPipelineState
         
         do {
-            mtlRenderPipelineState = try device.makeRenderPipelineState(descriptor: mtlDescriptor)
+            mtlState = try device.makeRenderPipelineState(descriptor: mtlDescriptor)
         } catch {
             fatalError("Failed to create Metal render pipeline state. \(error)")
         }
         
-        let state = RenderPipelineState(identifier: renderPipelineCache.count)
-        
-        mtlRenderPipelineStates.append(mtlRenderPipelineState)
+        let state = nextRenderPipelineState()
+                
         renderPipelineCache[descriptor] = state
+        mtlRenderPipelineStates[state] = mtlState
         
         return state
+    }
+    
+    public func nextRenderPipelineState() -> RenderPipelineState {
+        renderPipelineStateCounter += 1
+        
+        return RenderPipelineState(identifier: renderPipelineStateCounter)
     }
     
     @MainActor

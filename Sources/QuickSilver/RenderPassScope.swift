@@ -13,7 +13,9 @@ public class RenderPassScope {
     }
     
     unowned let frameScope: FrameScope
+    
     let descriptor: RenderPassDescriptor
+    
     var commands: [Command] = []
     
     init(
@@ -49,7 +51,13 @@ public class RenderPassScope {
         ))))
     }
     
-    public func draw(primitiveType: PrimitiveType = .triangle, vertexStart: Int = 0, vertexCount: Int, instanceCount: Int = 1, baseInstance: Int = 0) {
+    public func draw(
+        primitiveType: PrimitiveType = .triangle,
+        vertexStart: Int = 0,
+        vertexCount: Int,
+        instanceCount: Int = 1,
+        baseInstance: Int = 0
+    ) {
         precondition(vertexCount > 0)
         
         commands.append(.draw(.init(

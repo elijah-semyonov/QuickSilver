@@ -21,7 +21,7 @@ class TriangleViewScene {
     func draw(in frameScope: FrameScope) {
         frameScope.renderPass(describedBy: .init(
             colorAttachments: [
-                .texture(frameScope.presentableTexture, clearedWith: .init(red: 0.05, green: 0.07, blue: 0.1, alpha: 1.0))
+                .texture(frameScope.presentableTexture, clearRed: 0.05, clearGreen: 0.035, clearBlue: 0.02, clearAlpha: 1.0)
             ],
             depthAttachment: nil,
             stencilAttachment: nil

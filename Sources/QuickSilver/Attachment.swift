@@ -54,6 +54,12 @@ public struct ClearColor {
 
 public typealias ColorAttachment = Attachment<ClearColor>
 
+public extension ColorAttachment {
+    static func texture(_ texture: Texture, clearRed: Double, clearGreen: Double, clearBlue: Double, clearAlpha: Double) -> Self {
+        .init(texture: texture, loadAction: .clear(ClearValue(red: clearRed, green: clearGreen, blue: clearBlue, alpha: clearAlpha)), storeAction: nil)
+    }
+}
+
 public struct ClearDepth: ExpressibleByFloatLiteral {
     public static var zero: Self {
         0.0
