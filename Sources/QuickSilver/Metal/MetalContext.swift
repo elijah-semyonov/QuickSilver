@@ -99,11 +99,29 @@ class MetalContext {
                 fatalError("Failed to create render command encoder")
             }
             
+            let memorizer = MetalRenderBindingMemorizer(encoder: encoder)
+            
             for command in passScope.commands {
                 switch command {
+                case .setBuffer(let command):
+                    let (mtlBuffer, offset) = materialize(
+                        frameScope: frameScope,
+                        buffer: command.buffer
+                    )
+                    
+                    memorizer.setBuffer(
+                        mtlBuffer,
+                        bindings: command.bindings.mapValues { binding in
+                            .init(
+                                index: binding.index,
+                                offset: binding.offset + offset
+                            )
+                        }
+                    )
+                    
                 case .setDescribedPipelineState(let command):
                     let state = backend.mtlRenderPipelineState(for: command.descriptor)
-                    encoder.setRenderPipelineState(state)
+                    encoder.setRenderPipelineState(state)                
                 case .draw(let command):
                     let primitiveType = MTLPrimitiveType(command.primitiveType)
                     
@@ -131,7 +149,6 @@ class MetalContext {
                             vertexCount: command.vertexCount
                         )
                     }
-                    break
                 }
             }
             
@@ -143,6 +160,27 @@ class MetalContext {
         }
         
         commandBuffer.commit()
+    }
+    
+    func materialize(frameScope: FrameScope, buffer: Buffer) -> (MTLBuffer, offset: Int) {
+        guard let inferredBuffer = frameScope.buffers[buffer] else {
+            fatalError("Unknown buffer \(buffer)")
+        }
+        
+        switch inferredBuffer.asTagged {
+        case .deferredInitialized(let buffer):
+            let mtlBuffer = buffer.source.withUnsafeRawBufferPointer { bufferPtr in
+                guard let bytes = bufferPtr.baseAddress else { return nil as MTLBuffer? }
+                
+                return backend.device.makeBuffer(bytes: bytes, length: bufferPtr.count, options: [])
+            }
+            
+            guard let mtlBuffer else {
+                fatalError("Couldn't materialize buffer \(buffer)")
+            }
+            
+            return (mtlBuffer, 0)
+        }
     }
     
     func materialize(frameScope: FrameScope, texture: Texture) -> MTLTexture {

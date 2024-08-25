@@ -5,7 +5,7 @@
 //  Created by Elijah Semyonov on 20/08/2024.
 //
 
-struct SetDescribedPipelineStateCommand {
+struct SetDescribedRenderPipelineStateCommand {
     let descriptor: RenderPipelineDescriptor
 }
 
@@ -33,4 +33,18 @@ struct DrawCommand {
         self.instanceCount = instanceCount
         self.baseInstance = baseInstance
     }
+}
+
+public struct BufferBinding {
+    let index: Int
+    let offset: Int
+}
+
+struct SetBuffer {
+    let buffer: Buffer
+}
+
+struct SetRenderBuffer {
+    let buffer: Buffer
+    let bindings: [RenderPassStage: BufferBinding]
 }

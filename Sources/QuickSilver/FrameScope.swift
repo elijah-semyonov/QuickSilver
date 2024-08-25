@@ -8,9 +8,13 @@
 import QuartzCore
 
 public class FrameScope {
-    var nextTextureId: Int = 0
+    var textureCounter: Int = 0
+    
+    var bufferCounter: Int = 0
     
     var textures: [Texture: InferredTexture] = [:]
+    
+    var buffers: [Buffer: InferredBuffer] = [:]
     
     var actualPresentableTexture: Texture?
     
@@ -47,9 +51,21 @@ public class FrameScope {
     ) -> Texture {
         deposit(
             DeferredTexture(
-                name: "Deferred texture \(UUID().uuidString)",
+                name: name,
                 dataArrangement: .oneDimensional(dataArrangment),
                 pixelFormat: pixelFormat
+            )
+        )
+    }
+    
+    public func buffer<T>(
+        named name: String? = nil,
+        array: [T]
+    ) -> Buffer {
+        deposit(
+            DeferredInitializedBuffer(
+                name: name,
+                array: array
             )
         )
     }
@@ -83,11 +99,27 @@ public class FrameScope {
         return texture
     }
     
+    func deposit<T>(_ inferredBuffer: T) -> Buffer where T: InferredBuffer {
+        let buffer = nextBuffer()
+        
+        buffers[buffer] = inferredBuffer
+        
+        return buffer
+    }
+    
     func nextTexture() -> Texture {
         defer {
-            nextTextureId += 1
+            textureCounter += 1
         }
         
-        return Texture(identifier: nextTextureId)
+        return Texture(identifier: textureCounter)
+    }
+    
+    func nextBuffer() -> Buffer {
+        defer {
+            bufferCounter += 1
+        }
+        
+        return Buffer(identifier: bufferCounter)
     }
 }

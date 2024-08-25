@@ -7,9 +7,11 @@
 
 public class RenderPassScope {
     enum Command {
-        case setDescribedPipelineState(SetDescribedPipelineStateCommand)
+        case setDescribedPipelineState(SetDescribedRenderPipelineStateCommand)
         
         case draw(DrawCommand)
+        
+        case setBuffer(SetRenderBuffer)
     }
     
     unowned let frameScope: FrameScope
@@ -67,5 +69,24 @@ public class RenderPassScope {
             instanceCount: instanceCount,
             baseInstance: baseInstance
         )))
+    }
+    
+    public func setBuffer(
+        _ buffer: Buffer,
+        bindings: [RenderPassStage: BufferBinding]
+    ) {
+        commands.append(.setBuffer(.init(buffer: buffer, bindings: bindings)))
+    }
+    
+    public func setBuffer(
+        _ buffer: Buffer,
+        indices: [RenderPassStage: Int]
+    ) {
+        setBuffer(
+            buffer,
+            bindings: indices.mapValues { index in
+                .init(index: index, offset: 0)
+            }
+        )
     }
 }
